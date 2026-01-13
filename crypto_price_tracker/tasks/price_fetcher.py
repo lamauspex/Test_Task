@@ -1,7 +1,6 @@
 """
-Задачи Celery для периодического получения цен.
-
-Содержит задачу для регулярного получения цен с Deribit API.
+Задачи Celery для периодического получения цен
+Содержит задачу для регулярного получения цен с Deribit API
 """
 import logging
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 )
 def fetch_all_prices(self) -> dict:
     """
-    Получить все цены с Deribit и сохранить в базу данных.
+    Получить все цены с Deribit и сохранить в базу данных
 
     Периодическая задача, вызываемая Celery beat.
     Повторяет попытку до 3 раз при неудаче.
@@ -64,7 +63,7 @@ def fetch_all_prices(self) -> dict:
 
 def setup_periodic_tasks(celery_app) -> None:
     """
-    Настроить периодические задачи Celery.
+    Настроить периодические задачи Celery
 
     Args:
         celery_app: Экземпляр приложения Celery

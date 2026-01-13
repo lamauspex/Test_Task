@@ -8,7 +8,6 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Optional
-
 import aiohttp
 
 from app.config import get_settings
@@ -18,23 +17,23 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PriceData:
-    """Датакласс для информации о цене."""
+    """ Датакласс для информации о цене """
+
     ticker: str
     price: Decimal
     timestamp: int
 
 
 class DeribitClientError(Exception):
-    """Исключение, выбрасываемое при ошибках API Deribit."""
+    """ Исключение, выбрасываемое при ошибках API Deribit """
     pass
 
 
 class DeribitClient:
     """
-    Асинхронный клиент для API Deribit.
-
-    Использует aiohttp для неблокирующих HTTP-запросов.
-    Реализует паттерн синглтона для эффективного использования ресурсов.
+    Асинхронный клиент для API Deribit
+    Использует aiohttp для неблокирующих HTTP-запросов
+    Реализует паттерн синглтона для эффективного использования ресурсов
     """
 
     _instance: Optional["DeribitClient"] = None
@@ -42,7 +41,7 @@ class DeribitClient:
 
     def __new__(cls) -> "DeribitClient":
         """
-        Реализация паттерна синглтона.
+        Реализация паттерна синглтона
 
         Returns:
             DeribitClient: Одиночный экземпляр клиента
@@ -52,15 +51,15 @@ class DeribitClient:
         return cls._instance
 
     def __init__(self) -> None:
-        """Инициализация клиента с настройками."""
+        """Инициализация клиента с настройками"""
+
         self._settings = get_settings()
         self._api_url = self._settings.deribit_api_url
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """
-        Получить или создать сессию aiohttp.
-
-        Сессия используется повторно для эффективности пула соединений.
+        Получить или создать сессию aiohttp
+        Сессия используется повторно для эффективности пула соединений
 
         Returns:
             aiohttp.ClientSession: HTTP сессия
@@ -68,6 +67,7 @@ class DeribitClient:
         Raises:
             DeribitClientError: Если создание сессии не удалось
         """
+
         if self._session is None or self._session.closed:
             timeout = aiohttp.ClientTimeout(total=30)
             self._session = aiohttp.ClientSession(
@@ -78,7 +78,7 @@ class DeribitClient:
 
     async def _fetch_price(self, ticker: str) -> PriceData:
         """
-        Получить цену для одного тикера.
+        Получить цену для одного тикера
 
         Args:
             ticker: Пара криптовалют (btc_usd или eth_usd)
@@ -136,9 +136,8 @@ class DeribitClient:
 
     async def fetch_all_prices(self) -> Dict[str, PriceData]:
         """
-        Получить цены для всех поддерживаемых тикеров.
-
-        Получает цены BTC/USD и ETH/USD одновременно.
+        Получить цены для всех поддерживаемых тикеров
+        Получает цены BTC/USD и ETH/USD одновременно
 
         Returns:
             Dict[str, PriceData]: Словарь, связывающий тикер с данными о цене
@@ -164,9 +163,8 @@ class DeribitClient:
 
     async def close(self) -> None:
         """
-        Закрыть сессию aiohttp.
-
-        Должен вызываться при завершении работы приложения.
+        Закрыть сессию aiohttp
+        Должен вызываться при завершении работы приложения
         """
         if self._session and not self._session.closed:
             await self._session.close()
@@ -174,6 +172,5 @@ class DeribitClient:
 
 
 # Импорт asyncio для gather
-
 # Синглтон экземпляр для использования в приложении
 deribit_client = DeribitClient()

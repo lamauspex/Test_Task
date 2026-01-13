@@ -38,7 +38,7 @@ celery_app.conf.update(
 
 def get_celery_app() -> Celery:
     """
-    Получить экземпляр приложения Celery.
+    Получить экземпляр приложения Celery
 
     Returns:
         Celery: Настроенный экземпляр Celery
