@@ -1,7 +1,6 @@
 """
-Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов.
-
-Получает индексные цены для BTC/USD и ETH/USD.
+Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов
+Получает индексные цены для BTC/USD и ETH/USD
 """
 import asyncio
 import logging
@@ -46,6 +45,7 @@ class DeribitClient:
         Returns:
             DeribitClient: Одиночный экземпляр клиента
         """
+
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -89,6 +89,7 @@ class DeribitClient:
         Raises:
             DeribitClientError: Если запрос к API неудачен
         """
+
         session = await self._get_session()
 
         # Преобразование формата тикера для API Deribit
@@ -142,6 +143,7 @@ class DeribitClient:
         Returns:
             Dict[str, PriceData]: Словарь, связывающий тикер с данными о цене
         """
+
         tickers = ["btc_usd", "eth_usd"]
         prices: Dict[str, PriceData] = {}
 
@@ -166,6 +168,7 @@ class DeribitClient:
         Закрыть сессию aiohttp
         Должен вызываться при завершении работы приложения
         """
+
         if self._session and not self._session.closed:
             await self._session.close()
             self._session = None
