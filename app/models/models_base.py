@@ -2,12 +2,11 @@
 
 
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Index
 
-from app.models.mixin.time_mixin import (
+from .mixin import (
     TimestampMixin,
-    UUIDPrimaryKeyMixin
+    UUIDPrimaryKeyMixin,
+    UnixTimestampMixin
 )
 
 
@@ -19,7 +18,8 @@ class Base(DeclarativeBase):
 class BaseModel(
     Base,
     TimestampMixin,
-    UUIDPrimaryKeyMixin
+    UUIDPrimaryKeyMixin,
+    UnixTimestampMixin
 ):
     """
     Базовый модель для всех моделей SQLAlchemy
@@ -31,17 +31,5 @@ class BaseModel(
     def __tablename__(cls):
         return cls.__name__.lower() + 's'
 
-    # Составной индекс для эффективных запросов по тикеру и диапазону времени
-    __table_args__ = (
-        Index(
-            "ix_price_records_ticker_timestamp",
-            "ticker",
-            "timestamp"
-        ),
-    )
-
     def __repr__(self) -> str:
-        return (
-            f"<PriceRecord(id={self.id}, ticker={self.ticker}, "
-            f"price={self.price}, timestamp={self.timestamp})>"
-        )
+        return f"<{self.__class__.__name__}(id={self.id})>"

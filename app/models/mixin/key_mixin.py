@@ -1,7 +1,7 @@
 
+from uuid import UUID as UUIDType, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column
-from uuid import UUID as UUIDType, uuid4
 
 from app.models.decorators import UUIDTypeDecorator
 

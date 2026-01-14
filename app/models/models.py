@@ -4,16 +4,17 @@
 """
 
 from decimal import Decimal
-from app.models.models_base import BaseModel
+
 from sqlalchemy import (
     DECIMAL,
-    Integer,
     String,
 )
 from sqlalchemy.orm import (
     Mapped,
     mapped_column
 )
+
+from .models_base import BaseModel
 
 
 class PriceRecord(BaseModel):
@@ -26,11 +27,6 @@ class PriceRecord(BaseModel):
         price: Текущая цена на момент получения
     """
 
-    id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True,
-        autoincrement=True
-    )
     ticker: Mapped[str] = mapped_column(
         String(20),
         nullable=False,

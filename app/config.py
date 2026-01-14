@@ -4,9 +4,18 @@
 Использует Pydantic Settings для управления переменными окружения.
 Паттерн: lazy loading через lru_cache без глобальных переменных.
 """
+
+from enum import Enum
 from functools import lru_cache
 from typing import Tuple
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class TickerEnum(str, Enum):
+    """Тикеры криптовалют."""
+    BTC_USD = "btc_usd"
+    ETH_USD = "eth_usd"
 
 
 class Settings(BaseSettings):
