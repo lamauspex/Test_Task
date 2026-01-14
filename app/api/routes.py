@@ -1,20 +1,43 @@
-"""
-API маршруты для эндпоинтов данных о ценах
-Реализует обязательные GET методы с параметром тикера
+"""API маршруты для эндпоинтов данных о ценах.
+
+Реализует обязательные GET методы с параметром тикера.
 """
 from datetime import datetime
-from typing import List
+from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.schemas import (
     ErrorResponse,
-    PriceRecordResponse
+    PriceRecordResponse,
 )
-from app.services.price_service import price_service
+from app.services.price_service import PriceService, get_price_service
 
 router = APIRouter(prefix="/api/v1/prices", tags=["Цены"])
+
+
+def validate_ticker(ticker: str) -> str:
+    """
+    Валидировать тикер криптовалюты.
+
+    Args:
+        ticker: Пара криптовалют
+
+    Returns:
+        str: Валидированный тикер в нижнем регистре
+
+    Raises:
+        HTTPException: Если тикер неверный
+    """
+    ticker = ticker.lower().strip()
+    if ticker not in ("btc_usd", "eth_usd"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неверный тикер. Должен быть 'btc_usd' или 'eth_usd'"
+        )
+    return ticker
 
 
 @router.get(
@@ -22,7 +45,7 @@ router = APIRouter(prefix="/api/v1/prices", tags=["Цены"])
     response_model=List[PriceRecordResponse],
     responses={400: {"model": ErrorResponse}},
     summary="Получить все цены по тикеру",
-    description="Возвращает все сохранённые записи о ценах"
+    description="Возвращает все сохранённые записи о ценах для указанной криптовалюты."
 )
 async def get_all_prices(
     ticker: str = Query(
@@ -30,33 +53,37 @@ async def get_all_prices(
         description="Пара криптовалют (btc_usd или eth_usd)",
         examples=["btc_usd"]
     ),
-    db: AsyncSession = Depends(get_db)
+    limit: int = Query(default=1000, ge=1, le=10000),
+    offset: int = Query(default=0, ge=0),
+    service: PriceService = Depends(get_price_service),
+    db: AsyncSession = Depends(get_db),
 ) -> List[PriceRecordResponse]:
     """
-    Получить все записи о ценах для указанного тикера
+    Получить все записи о ценах для указанного тикера.
 
     Возвращает список всех сохранённых записей о ценах для тикера,
-    упорядоченных по timestamp в порядке убывания
+    упорядоченных по timestamp в порядке убывания.
 
     Args:
         ticker: Пара криптовалют (btc_usd или eth_usd)
-        db: Сессия базы данных
+        limit: Максимальное количество записей (1-10000)
+        offset: Количество записей для пропуска
+        service: Сервис цен (DI)
+        db: Сессия базы данных (DI)
 
     Returns:
-        List: Список записей о ценах
+        List[PriceRecordResponse]: Список записей о ценах
 
     Raises:
         HTTPException 400: Если тикер неверный
     """
-    # Валидация тикера
-    ticker = ticker.lower().strip()
-    if ticker not in ("btc_usd", "eth_usd"):
-        raise HTTPException(
-            status_code=400,
-            detail="Неверный тикер. Должен быть 'btc_usd' или 'eth_usd'"
-        )
+    ticker = validate_ticker(ticker)
 
-    prices = await price_service.get_prices_by_ticker(ticker)
+    prices = await service.get_prices_by_ticker(
+        ticker=ticker,
+        limit=limit,
+        offset=offset
+    )
 
     return prices
 
@@ -66,7 +93,7 @@ async def get_all_prices(
     response_model=dict,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Получить последнюю цену по тикеру",
-    description="Возвращает самую свежую запись о цене"
+    description="Возвращает самую свежую запись о цене для указанной криптовалюты."
 )
 async def get_latest_price(
     ticker: str = Query(
@@ -74,15 +101,18 @@ async def get_latest_price(
         description="Пара криптовалют (btc_usd или eth_usd)",
         examples=["btc_usd"]
     ),
-    db: AsyncSession = Depends(get_db)
+    service: PriceService = Depends(get_price_service),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
-    Получить последнюю цену для указанного тикера
-    Возвращает самую недавнюю сохранённую запись о цене для тикера
+    Получить последнюю цену для указанного тикера.
+
+    Возвращает самую недавнюю сохранённую запись о цене для тикера.
 
     Args:
         ticker: Пара криптовалют (btc_usd или eth_usd)
-        db: Сессия базы данных
+        service: Сервис цен (DI)
+        db: Сессия базы данных (DI)
 
     Returns:
         dict: Последняя запись о цене
@@ -91,15 +121,9 @@ async def get_latest_price(
         HTTPException 400: Если тикер неверный
         HTTPException 404: Если записи о ценах не найдены для тикера
     """
-    # Валидация тикера
-    ticker = ticker.lower().strip()
-    if ticker not in ("btc_usd", "eth_usd"):
-        raise HTTPException(
-            status_code=400,
-            detail="Неверный тикер. Должен быть 'btc_usd' или 'eth_usd'"
-        )
+    ticker = validate_ticker(ticker)
 
-    record = await price_service.get_latest_price(ticker)
+    record = await service.get_latest_price(ticker)
 
     if record is None:
         raise HTTPException(
@@ -125,7 +149,7 @@ async def get_latest_price(
 async def get_prices_by_date_range(
     ticker: str = Query(
         ...,
-        description="Пара криптовалют (btc_usd или eth_usd)",
+        description="Пара криптовалют (btc_usd или eth_usд)",
         examples=["btc_usd"]
     ),
     start_date: int = Query(
@@ -140,7 +164,9 @@ async def get_prices_by_date_range(
         description="Конец диапазона дат как UNIX timestamp",
         examples=[1704153600]
     ),
-    db: AsyncSession = Depends(get_db)
+    limit: int = Query(default=1000, ge=1, le=10000),
+    service: PriceService = Depends(get_price_service),
+    db: AsyncSession = Depends(get_db),
 ) -> List[PriceRecordResponse]:
     """
     Получить записи о ценах для тикера в диапазоне дат.
@@ -152,33 +178,27 @@ async def get_prices_by_date_range(
         ticker: Пара криптовалют (btc_usd или eth_usd)
         start_date: Начало диапазона дат (UNIX timestamp)
         end_date: Конец диапазона дат (UNIX timestamp)
-        db: Сессия базы данных
+        limit: Максимальное количество записей (1-10000)
+        service: Сервис цен (DI)
+        db: Сессия базы данных (DI)
 
     Returns:
-        List: Список записей о ценах в диапазоне дат
+        List[PriceRecordResponse]: Список записей о ценах в диапазоне дат
 
     Raises:
         HTTPException 400: Если параметры неверные
     """
-    # Валидация тикера
-    ticker = ticker.lower().strip()
-    if ticker not in ("btc_usd", "eth_usd"):
-        raise HTTPException(
-            status_code=400,
-            detail="Неверный тикер. Должен быть 'btc_usd' или 'eth_usd'"
-        )
+    ticker = validate_ticker(ticker)
 
-    # Валидация диапазона дат
     if end_date < start_date:
         raise HTTPException(
             status_code=400,
             detail="end_date должен быть больше или равен start_date"
         )
 
-    async with get_db() as session:
+    async with service.database.get_session() as session:
         from sqlalchemy import select, and_
         from app.models import PriceRecord
-        from app.schemas import PriceRecordResponse
 
         query = (
             select(PriceRecord)
@@ -190,6 +210,7 @@ async def get_prices_by_date_range(
                 )
             )
             .order_by(PriceRecord.timestamp.desc())
+            .limit(limit)
         )
 
         result = await session.execute(query)
@@ -201,12 +222,12 @@ async def get_prices_by_date_range(
 @router.get(
     "/health",
     tags=["Здоровье"],
-    summary="Проверка здоровья",
+    summary="Проверка работоспособности",
     description="Простой эндпоинт для проверки работоспособности."
 )
 async def health_check() -> dict:
     """
-    Эндпоинт проверки здоровья.
+    Эндпоинт проверки работоспособности.
 
     Returns:
         dict: Статус работоспособности

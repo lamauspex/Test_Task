@@ -5,30 +5,87 @@
 """
 import logging
 from datetime import datetime
-from typing import List, Optional
-from sqlalchemy import select, func
+from decimal import Decimal
+from typing import TYPE_CHECKING, List, Optional, Protocol, runtime_checkable
 
-from app.database import database
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import Database, get_database
 from app.models import PriceRecord
 from app.schemas import PriceRecordResponse
-from clients.deribit_client import PriceData, deribit_client
+from clients.deribit_client import DeribitClient, PriceData
+
+if TYPE_CHECKING:
+    from app.config import Settings
 
 logger = logging.getLogger(__name__)
 
 
+@runtime_checkable
+class IPriceService(Protocol):
+    """Протокол (интерфейс) сервиса цен."""
+
+    async def save_price_data(self, price_data: PriceData) -> PriceRecord:
+        ...
+
+    async def fetch_and_save_all_prices(self) -> List[PriceRecord]:
+        ...
+
+    async def get_prices_by_ticker(
+        self, ticker: str, limit: int, offset: int
+    ) -> List[PriceRecordResponse]:
+        ...
+
+    async def get_latest_price(
+        self, ticker: str
+    ) -> Optional[PriceRecordResponse]:
+        ...
+
+
 class PriceService:
     """
-    Сервис для операций с ценами
-    Предоставляет методы для сохранения и получения данных о ценах
+    Сервис для операций с ценами.
+
+    Предоставляет методы для сохранения и получения данных о ценах.
+    Использует Dependency Injection для всех зависимостей.
+
+    Attributes:
+        database: Менеджер подключения к базе данных
+        deribit_client: Клиент API Deribit
     """
 
-    def __init__(self) -> None:
-        """ Инициализация сервиса цен """
-        self._client = deribit_client
+    def __init__(
+        self,
+        database: Database | None = None,
+        deribit_client: DeribitClient | None = None,
+        settings: "Settings | None" = None,
+    ) -> None:
+        """
+        Инициализация сервиса цен.
+
+        Args:
+            database: Менеджер БД. Если None - создаётся новый.
+            deribit_client: Клиент Deribit. Если None - создаётся новый.
+            settings: Настройки приложения.
+        """
+        self._database = database or get_database()
+        self._deribit_client = deribit_client or DeribitClient()
+        self._settings = settings
+
+    @property
+    def database(self) -> Database:
+        """Получить менеджер базы данных."""
+        return self._database
+
+    @property
+    def deribit_client(self) -> DeribitClient:
+        """Получить клиент Deribit."""
+        return self._deribit_client
 
     async def save_price_data(self, price_data: PriceData) -> PriceRecord:
         """
-        Сохранить одну запись о цене в базу данных
+        Сохранить одну запись о цене в базу данных.
 
         Args:
             price_data: Данные о цене от клиента Deribit
@@ -36,7 +93,7 @@ class PriceService:
         Returns:
             PriceRecord: Созданная запись в базе данных
         """
-        async with database.get_session() as session:
+        async with self._database.get_session() as session:
             record = PriceRecord(
                 ticker=price_data.ticker,
                 price=price_data.price,
@@ -55,12 +112,12 @@ class PriceService:
 
     async def fetch_and_save_all_prices(self) -> List[PriceRecord]:
         """
-        Получить все цены с Deribit и сохранить в базу данных
+        Получить все цены с Deribit и сохранить в базу данных.
 
         Returns:
             List[PriceRecord]: Список сохранённых записей
         """
-        price_data_map = await self._client.fetch_all_prices()
+        price_data_map = await self._deribit_client.fetch_all_prices()
         saved_records = []
 
         for ticker, price_data in price_data_map.items():
@@ -90,7 +147,7 @@ class PriceService:
         Returns:
             List[PriceRecordResponse]: Список записей о ценах
         """
-        async with database.get_session() as session:
+        async with self._database.get_session() as session:
             query = (
                 select(PriceRecord)
                 .where(PriceRecord.ticker == ticker)
@@ -105,11 +162,10 @@ class PriceService:
             return [PriceRecordResponse.model_validate(r) for r in records]
 
     async def get_latest_price(
-        self,
-        ticker: str
+        self, ticker: str
     ) -> Optional[PriceRecordResponse]:
         """
-        Получить последнюю цену для тикера
+        Получить последнюю цену для тикера.
 
         Args:
             ticker: Пара криптовалют
@@ -117,7 +173,7 @@ class PriceService:
         Returns:
             Optional[PriceRecordResponse]: Последняя запись о цене или None
         """
-        async with database.get_session() as session:
+        async with self._database.get_session() as session:
             query = (
                 select(PriceRecord)
                 .where(PriceRecord.ticker == ticker)
@@ -132,59 +188,12 @@ class PriceService:
                 return PriceRecordResponse.model_validate(record)
             return None
 
-    async def get_prices_by_date_range(
-        self,
-        ticker: str,
-        start_date: int,
-        end_date: int,
-        limit: int = 1000
-    ) -> PriceRecordResponse:
-        """
-        Получить записи о ценах в диапазоне дат
 
-        Args:
-            ticker: Пара криптовалют
-            start_date: Начальный UNIX timestamp
-            end_date: Конечный UNIX timestamp
-            limit: Максимальное количество возвращаемых записей
+def get_price_service() -> PriceService:
+    """
+    Фабрика для получения инстанса сервиса цен.
 
-        Returns:
-            PriceRecordResponse: Ответ с записями о ценах
-        """
-        async with database.get_session() as session:
-            # Запрос подсчёта
-            count_query = (
-                select(func.count(PriceRecord.id))
-                .where(
-                    PriceRecord.ticker == ticker,
-                    PriceRecord.timestamp >= start_date,
-                    PriceRecord.timestamp <= end_date
-                )
-            )
-            count_result = await session.execute(count_query)
-            total_count = count_result.scalar()
-
-            # Запрос данных
-            query = (
-                select(PriceRecord)
-                .where(
-                    PriceRecord.ticker == ticker,
-                    PriceRecord.timestamp >= start_date,
-                    PriceRecord.timestamp <= end_date
-                )
-                .order_by(PriceRecord.timestamp.desc())
-                .limit(limit)
-            )
-
-            result = await session.execute(query)
-            records = result.scalars().all()
-
-            # Построение ответа с последней записью для информации заголовка
-            latest_record = records[0] if records else None
-
-            return PriceRecordResponse.model_validate(latest_record) \
-                if latest_record else None
-
-
-# Синглтон экземпляр для использования в приложении
-price_service = PriceService()
+    Returns:
+        PriceService: Инстанс сервиса цен
+    """
+    return PriceService()

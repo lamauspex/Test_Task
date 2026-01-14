@@ -1,7 +1,7 @@
 """
 Точка входа FastAPI приложения.
 
-Создаёт и настраивает приложение FastAPI с маршрутами и lifespan.
+Создаёт и настраивает приложение FastAPI с lifespan.
 """
 import logging
 from contextlib import asynccontextmanager
@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database import database
+from app.database import get_database
 from app.api.routes import router
 
 # Настройка логирования
@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
-    Управление жизненным циклом приложения
-    Инициализирует базу данных при запуске
-    и закрывает соединения при завершении.
+    Управление жизненным циклом приложения.
+
+    Инициализирует базу данных при запуске и закрывает соединения при завершении.
 
     Args:
         app: Экземпляр FastAPI
@@ -36,18 +36,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Запуск приложения...")
 
     # Инициализация базы данных
-    await database.init()
+    db = get_database()
+    await db.init()
     logger.info("База данных инициализирована")
 
     # Создание таблиц
-    await database.create_tables()
+    await db.create_tables()
     logger.info("Таблицы базы данных созданы")
 
     yield
 
     # Завершение работы
     logger.info("Завершение работы приложения...")
-    await database.close()
+    await db.close()
     logger.info("Соединения с базой данных закрыты")
 
 
