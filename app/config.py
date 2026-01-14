@@ -6,7 +6,6 @@
 """
 from functools import lru_cache
 from typing import Tuple
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

@@ -5,14 +5,11 @@
 """
 import logging
 from datetime import datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING, List, Optional, Protocol, runtime_checkable
-
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.database import Database, get_database
-from app.models import PriceRecord
+from app.models.models import PriceRecord
 from app.schemas import PriceRecordResponse
 from clients.deribit_client import DeribitClient, PriceData
 

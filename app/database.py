@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import close_all_sessions
 
-from app.models import Base
+from app.models.models import Base
 
 if TYPE_CHECKING:
     from app.config import Settings
@@ -22,9 +22,8 @@ if TYPE_CHECKING:
 
 class Database:
     """
-    Менеджер подключения к базе данных.
-
-    Управляет асинхронным движком и фабрикой сессий для PostgreSQL.
+    Менеджер подключения к базе данных
+    Управляет асинхронным движком и фабрикой сессий для PostgreSQL
 
     Example:
         db = Database(settings)
@@ -38,7 +37,8 @@ class Database:
         Инициализация менеджера базы данных.
 
         Args:
-            settings: Настройки приложения. Если None - используются по умолчанию.
+            settings: Настройки приложения.
+            Если None - используются по умолчанию.
         """
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker[AsyncSession] | None = None

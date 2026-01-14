@@ -3,41 +3,33 @@
 Реализует обязательные GET методы с параметром тикера.
 """
 from datetime import datetime
-from typing import Annotated, List
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List
+from app.utils import validate_ticker
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query
+)
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
 
+from app.models.models import PriceRecord
 from app.database import get_db
 from app.schemas import (
     ErrorResponse,
     PriceRecordResponse,
 )
-from app.services.price_service import PriceService, get_price_service
+from app.services.price_service import (
+    PriceService,
+    get_price_service
+)
 
-router = APIRouter(prefix="/api/v1/prices", tags=["Цены"])
 
-
-def validate_ticker(ticker: str) -> str:
-    """
-    Валидировать тикер криптовалюты.
-
-    Args:
-        ticker: Пара криптовалют
-
-    Returns:
-        str: Валидированный тикер в нижнем регистре
-
-    Raises:
-        HTTPException: Если тикер неверный
-    """
-    ticker = ticker.lower().strip()
-    if ticker not in ("btc_usd", "eth_usd"):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Неверный тикер. Должен быть 'btc_usd' или 'eth_usd'"
-        )
-    return ticker
+router = APIRouter(
+    prefix="/api/v1/prices",
+    tags=["Цены"]
+)
 
 
 @router.get(
@@ -45,7 +37,8 @@ def validate_ticker(ticker: str) -> str:
     response_model=List[PriceRecordResponse],
     responses={400: {"model": ErrorResponse}},
     summary="Получить все цены по тикеру",
-    description="Возвращает все сохранённые записи о ценах для указанной криптовалюты."
+    description="Возвращает все сохранённые записи \
+        о ценах для указанной криптовалюты."
 )
 async def get_all_prices(
     ticker: str = Query(
@@ -93,7 +86,8 @@ async def get_all_prices(
     response_model=dict,
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
     summary="Получить последнюю цену по тикеру",
-    description="Возвращает самую свежую запись о цене для указанной криптовалюты."
+    description="Возвращает самую свежую запись \
+        о цене для указанной криптовалюты."
 )
 async def get_latest_price(
     ticker: str = Query(
@@ -144,7 +138,8 @@ async def get_latest_price(
     response_model=List[PriceRecordResponse],
     responses={400: {"model": ErrorResponse}},
     summary="Получить цены по диапазону дат",
-    description="Возвращает записи о ценах для тикера в указанном диапазоне UNIX timestamp."
+    description="Возвращает записи о ценах для тикера \
+        в указанном диапазоне UNIX timestamp."
 )
 async def get_prices_by_date_range(
     ticker: str = Query(
@@ -197,8 +192,6 @@ async def get_prices_by_date_range(
         )
 
     async with service.database.get_session() as session:
-        from sqlalchemy import select, and_
-        from app.models import PriceRecord
 
         query = (
             select(PriceRecord)
