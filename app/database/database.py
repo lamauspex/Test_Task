@@ -24,12 +24,6 @@ class Database:
     """
     Менеджер подключения к базе данных
     Управляет асинхронным движком и фабрикой сессий для PostgreSQL
-
-    Example:
-        db = Database(settings)
-        await db.init()
-        async with db.get_session() as session:
-            # работа с базой
     """
 
     def __init__(self, settings: "Settings | None" = None) -> None:

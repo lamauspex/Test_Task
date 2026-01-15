@@ -3,17 +3,17 @@
 import os
 from typing import Any, Dict, Optional
 
-# Простая заглушка для Settings
+from app.config.base import BaseConfig
 
 
-class Settings:
+class Settings(BaseConfig):
     """Настройки приложения."""
 
     def __init__(self) -> None:
         # Основные настройки базы данных
         self.database_url: str = os.getenv(
             "DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost/crypto_prices"
+            "sqlite+aiosqlite:///./crypto_prices.db"  # По умолчанию SQLite
         )
 
         # Настройки API
@@ -65,6 +65,7 @@ def get_settings() -> Settings:
     global _settings
     if _settings is None:
         _settings = Settings()
+        print(f"Загружены настройки: database_url = {_settings.database_url}")
     return _settings
 
 
