@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import close_all_sessions
 
-from app.models.models import Base
+from app.models.models_base import Base
 
 if TYPE_CHECKING:
     from app.config import Settings

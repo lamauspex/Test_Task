@@ -1,65 +1,74 @@
-"""
-Модуль конфигурации для приложения crypto price tracker.
-
-Использует Pydantic Settings для управления переменными окружения.
-Паттерн: lazy loading через lru_cache без глобальных переменных.
-"""
+"""Конфигурация приложения для crypto price tracker."""
 
 import os
-from typing import List
-from pydantic import BaseSettings, Field
+from typing import Any, Dict, Optional
+
+# Простая заглушка для Settings
 
 
-class Settings(BaseSettings):
+class Settings:
     """Настройки приложения."""
 
-    # API настройки
-    app_host: str = Field(
-        default="0.0.0.0", description="Хост для запуска приложения")
-    app_port: int = Field(
-        default=8000, description="Порт для запуска приложения")
-    app_title: str = Field(
-        default="Crypto Price Tracker API", description="Заголовок API")
-    app_version: str = Field(default="1.0.0", description="Версия API")
+    def __init__(self) -> None:
+        # Основные настройки базы данных
+        self.database_url: str = os.getenv(
+            "DATABASE_URL",
+            "postgresql+asyncpg://postgres:postgres@localhost/crypto_prices"
+        )
 
-    # База данных
-    database_url: str = Field(
-        default="postgresql+asyncpg://postgres:password@localhost:5432/crypto_tracker",
-        description="URL подключения к базе данных"
-    )
+        # Настройки API
+        self.api_host: str = os.getenv("API_HOST", "0.0.0.0")
+        self.api_port: int = int(os.getenv("API_PORT", "8000"))
 
-    # Deribit API
-    deribit_base_url: str = Field(
-        default="https://www.deribit.com/api/v2",
-        description="Базовый URL Deribit API"
-    )
-    deribit_timeout: int = Field(
-        default=30, description="Таймаут для запросов к Deribit")
+        # Настройки Deribit API
+        self.deribit_client_id: str = os.getenv("DERIBIT_CLIENT_ID", "")
+        self.deribit_client_secret: str = os.getenv(
+            "DERIBIT_CLIENT_SECRET", "")
+        self.deribit_api_url: str = os.getenv(
+            "DERIBIT_API_URL", "https://www.deribit.com/api/v2")
 
-    # Celery
-    celery_broker_url: str = Field(
-        default="redis://localhost:6379/0",
-        description="URL брокера для Celery"
-    )
-    celery_result_backend: str = Field(
-        default="redis://localhost:6379/0",
-        description="URL бэкенда результатов для Celery"
-    )
+        # Настройки Celery (если используется)
+        self.celery_broker_url: str = os.getenv(
+            "CELERY_BROKER_URL", "redis://localhost:6379/0")
+        self.celery_result_backend: str = os.getenv(
+            "CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 
-    # Валидные тикеры
-    valid_tickers: List[str] = Field(
-        default=["btc_usd", "eth_usd"],
-        description="Список валидных тикеров криптовалют"
-    )
+        # Настройки логирования
+        self.log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
-    # Настройки логирования
-    log_level: str = Field(default="INFO", description="Уровень логирования")
+    def model_dump(self) -> Dict[str, Any]:
+        """Вернуть настройки в виде словаря."""
+        return {
+            "database_url": self.database_url,
+            "api_host": self.api_host,
+            "api_port": self.api_port,
+            "deribit_client_id": self.deribit_client_id,
+            "deribit_client_secret": self.deribit_client_secret,
+            "deribit_api_url": self.deribit_api_url,
+            "celery_broker_url": self.celery_broker_url,
+            "celery_result_backend": self.celery_result_backend,
+            "log_level": self.log_level,
+        }
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+
+# Глобальный инстанс настроек
+_settings: Optional[Settings] = None
 
 
 def get_settings() -> Settings:
-    """Получить экземпляр настроек."""
-    return Settings()
+    """
+    Получить инстанс настроек приложения.
+
+    Returns:
+        Settings: Инстанс настроек
+    """
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
+
+
+def reload_settings() -> None:
+    """Перезагрузить настройки (полезно для тестов)."""
+    global _settings
+    _settings = None

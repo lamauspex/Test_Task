@@ -1,3 +1,4 @@
 __pycache__/
 .rvenv/
-Project.md
+.vscode/
+.pytest_cache/

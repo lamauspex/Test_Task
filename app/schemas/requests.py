@@ -1,12 +1,16 @@
 """Параметры запросов."""
 
 
-from pydantic import Field, field_validator
+from pydantic import Field
 
-from app.schemas import TickerQueryParams
+from .base import (
+    TickerBase,
+    TickerWithPaginationRequest,
+    DateRangeRequest
+)
 
 
-class DateRangeQueryParams(TickerQueryParams):
+class DateRangeQueryParams(TickerBase):
     """
     Параметры запроса с фильтром по диапазону дат.
     Расширяет валидацию тикера параметрами диапазона дат.
@@ -23,14 +27,20 @@ class DateRangeQueryParams(TickerQueryParams):
         description="Конечная дата как UNIX timestamp"
     )
 
-    @field_validator("end_date")
-    @classmethod
-    def validate_date_range(cls, v: int, info) -> int:
-        """Убедиться, что end_date больше или равен start_date."""
 
-        start = info.data.get("start_date", 0)
-        if v < start:
-            raise ValueError(
-                "end_date должен быть больше или равен start_date"
-            )
-        return v
+"""Схемы для запросов API с валидацией."""
+
+
+class AllPricesQuery(TickerWithPaginationRequest):
+    """Схема запроса для получения всех цен по тикеру."""
+    pass
+
+
+class LatestPriceQuery(TickerBase):
+    """Схема запроса для получения последней цены."""
+    pass
+
+
+class DateRangePricesQuery(DateRangeRequest):
+    """Схема запроса для получения цен по диапазону дат."""
+    pass

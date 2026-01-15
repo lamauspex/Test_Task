@@ -156,15 +156,3 @@ CREATE TABLE price_records (
     INDEX ix_price_records_ticker_timestamp (ticker, timestamp)
 );
 ```
-
----
-
-## Критерии оценки
-
-| Критерий | Статус |
-|----------|--------|
-| Чистая архитектура | ✅ Clean Architecture + слои |
-| Нейминг | ✅ PEP 8, snake_case, CamelCase |
-| Глобальные переменные | ✅ Только константы CAPS_CASE |
-| ООП | ✅ Классы, протоколы, DI |
-| Понимание решений | ✅ README + ARCHITECTURE.md |

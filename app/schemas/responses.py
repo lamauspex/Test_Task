@@ -6,7 +6,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from .base import ticker_field
+from .base import TickerField
 
 
 class PriceRecordResponse(BaseModel):
@@ -15,69 +15,79 @@ class PriceRecordResponse(BaseModel):
     Представляет одну запись о цене, возвращаемую API.
     """
 
-    id: int
-    ticker: str = ticker_field
+    ticker: str = TickerField
     price: Decimal = Field(
         ...,
-        description="Цена на момент получения"
+        description="Цена валюты"
     )
     timestamp: int = Field(
         ...,
-        description="UNIX timestamp"
+        ge=0,
+        description="Время в UNIX timestamp"
     )
     created_at: datetime = Field(
         ...,
-        description="Timestamp вставки в базу данных"
+        description="Время создания записи в БД"
     )
-
-    class Config:
-        from_attributes = True
 
 
 class PriceLatestResponse(BaseModel):
     """
     Схема ответа для последней цены.
-    Возвращает самую последнюю цену для тикера.
+    Возвращает самую свежую запись о цене для валюты.
     """
-    ticker: str = ticker_field
+
+    ticker: str = TickerField
     price: Decimal = Field(
         ...,
-        description="Текущая/последняя цена"
+        description="Последняя цена валюты"
     )
     timestamp: int = Field(
         ...,
-        description="UNIX timestamp цены"
+        ge=0,
+        description="Время в UNIX timestamp"
     )
     fetched_at: datetime = Field(
         ...,
-        description="Когда эти данные были получены"
+        description="Время получения цены"
     )
 
 
 class PriceDateRangeResponse(BaseModel):
     """
-    Схема ответа для истории цен с фильтром по диапазону дат.
-    Возвращает все цены в указанном диапазоне времени.
+    Схема ответа для цен по диапазону дат.
+    Возвращает список записей о ценах в указанном диапазоне.
     """
-    ticker: str = ticker_field
+
+    ticker: str = TickerField
     start_date: int = Field(
         ...,
-        description="Начальный UNIX timestamp"
+        ge=0,
+        description="Начальная дата диапазона (UNIX timestamp)"
     )
     end_date: int = Field(
         ...,
-        description="Конечный UNIX timestamp"
+        ge=0,
+        description="Конечная дата диапазона (UNIX timestamp)"
     )
     count: int = Field(
         ...,
+        ge=0,
         description="Количество возвращённых записей"
     )
     prices: List[PriceRecordResponse] = Field(
-        ...,
+        default_factory=list,
         description="Список записей о ценах"
     )
 
 
 class ErrorResponse(BaseModel):
-    """Схема для ответов об ошибках."""
-    detail: str
+    """
+    Схема ответа для ошибок.
+    Стандартная схема для всех HTTP ошибок.
+    """
+
+    detail: str = Field(
+        ...,
+        description="Описание ошибки"
+    )

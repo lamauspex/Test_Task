@@ -1,25 +1,47 @@
-"""Базовые классы, утилиты и переиспользуемые валидаторы."""
+"""Базовые схемы с валидацией."""
+
+from typing import Annotated
+
+from uuid import UUID
+from pydantic import BaseModel, Field, field_validator
+
+from app.types import VALID_TICKERS
 
 
-from pydantic import BaseModel, Field
+# Валидированный тикер через Pydantic Field
+TickerField = Field(
+    ...,
+    min_length=1,
+    description="Пара криптовалют (btc_usd или eth_usd)",
+    examples=["btc_usd"]
+)
 
 
 class BaseSchema(BaseModel):
     """Базовый класс для всех схем."""
 
-
-class TickerQuery(BaseModel):
-    """Базовые параметры запроса с тикером."""
-    ticker: str = Field(
-        ...,
-        min_length=1,
-        description="Пара криптовалют (btc_usd или eth_usd)",
-        examples=["btc_usd"]
-    )
+    model_config = {"from_attributes": True}
 
 
-class DateRangeQuery(BaseModel):
-    """Параметры запроса с диапазоном дат."""
+class TickerBase(BaseSchema):
+    """Базовая схема с тикером."""
+
+    id: UUID
+    ticker: Annotated[str, TickerField]
+
+    @field_validator("ticker")
+    @classmethod
+    def validate_ticker(cls, v: str) -> str:
+        """Валидация тикера криптовалюты."""
+        ticker_clean = v.lower().strip()
+        if ticker_clean not in VALID_TICKERS:
+            raise ValueError(
+                f"Неверный тикер. Допустимые: {', '.join(VALID_TICKERS)}")
+        return ticker_clean
+
+
+class DateRangeBase(BaseSchema):
+    """Базовая схема с диапазоном дат."""
     start_date: int = Field(
         ...,
         ge=0,
@@ -33,9 +55,19 @@ class DateRangeQuery(BaseModel):
         examples=[1704153600]
     )
 
+    @field_validator("end_date")
+    @classmethod
+    def validate_date_range(cls, v: int, info) -> int:
+        """Валидация диапазона дат."""
+        start_date = info.data.get("start_date", 0)
+        if v < start_date:
+            raise ValueError(
+                "end_date должен быть больше или равен start_date")
+        return v
 
-class PaginationParams(BaseModel):
-    """Параметры пагинации."""
+
+class PaginationBase(BaseSchema):
+    """Базовая схема с пагинацией."""
     limit: int = Field(
         default=1000,
         ge=1,
@@ -49,20 +81,22 @@ class PaginationParams(BaseModel):
     )
 
 
-# Переиспользуемые поля
-ticker_field = Field(
-    ...,
-    min_length=1,
-    description="Пара криптовалют (btc_usd или eth_usд)"
-)
+# Специализированные схемы для разных целей
+class TickerOnlyRequest(BaseSchema):
+    """Запрос только с тикером."""
+    ticker: Annotated[str, TickerField]
 
-timestamp_field = Field(
-    ...,
-    ge=0,
-    description="UNIX timestamp"
-)
 
-price_field = Field(
-    ...,
-    description="Цена"
-)
+class TickerWithPaginationRequest(TickerBase, PaginationBase):
+    """Запрос с тикером и пагинацией."""
+    pass
+
+
+class DateRangeRequest(TickerBase, DateRangeBase):
+    """Запрос с тикером и диапазоном дат."""
+    limit: int = Field(
+        default=1000,
+        ge=1,
+        le=10000,
+        description="Максимальное количество записей"
+    )

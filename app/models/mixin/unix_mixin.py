@@ -1,9 +1,9 @@
 
 
+from sqlalchemy import BigInteger
 from sqlalchemy.orm import (
     Mapped,
-    mapped_column,
-    BigInteger
+    mapped_column
 )
 
 
