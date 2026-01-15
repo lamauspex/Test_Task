@@ -5,68 +5,61 @@
 Паттерн: lazy loading через lru_cache без глобальных переменных.
 """
 
-from enum import Enum
-from functools import lru_cache
-from typing import Tuple
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
-class TickerEnum(str, Enum):
-    """Тикеры криптовалют."""
-    BTC_USD = "btc_usd"
-    ETH_USD = "eth_usd"
+import os
+from typing import List
+from pydantic import BaseSettings, Field
 
 
 class Settings(BaseSettings):
-    """
-    Настройки приложения, загружаемые из переменных окружения.
+    """Настройки приложения."""
 
-    Все настройки определены как атрибуты класса с умолчательными значениями.
-    Загрузка происходит лениво через get_settings().
-    """
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
+    # API настройки
+    app_host: str = Field(
+        default="0.0.0.0", description="Хост для запуска приложения")
+    app_port: int = Field(
+        default=8000, description="Порт для запуска приложения")
+    app_title: str = Field(
+        default="Crypto Price Tracker API", description="Заголовок API")
+    app_version: str = Field(default="1.0.0", description="Версия API")
+
+    # База данных
+    database_url: str = Field(
+        default="postgresql+asyncpg://postgres:password@localhost:5432/crypto_tracker",
+        description="URL подключения к базе данных"
     )
 
-    # Настройки базы данных
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/crypto_prices"
+    # Deribit API
+    deribit_base_url: str = Field(
+        default="https://www.deribit.com/api/v2",
+        description="Базовый URL Deribit API"
+    )
+    deribit_timeout: int = Field(
+        default=30, description="Таймаут для запросов к Deribit")
 
-    # Настройки Redis
-    redis_url: str = "redis://localhost:6379/0"
+    # Celery
+    celery_broker_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="URL брокера для Celery"
+    )
+    celery_result_backend: str = Field(
+        default="redis://localhost:6379/0",
+        description="URL бэкенда результатов для Celery"
+    )
 
-    # Настройки Celery
-    celery_broker_url: str = "redis://localhost:6379/0"
-    celery_result_backend: str = "redis://localhost:6379/0"
-    fetch_interval: int = 60  # секунды
+    # Валидные тикеры
+    valid_tickers: List[str] = Field(
+        default=["btc_usd", "eth_usd"],
+        description="Список валидных тикеров криптовалют"
+    )
 
-    # Настройки Deribit API
-    deribit_api_url: str = "https://www.deribit.com/api/v2/public/get_index_price"
+    # Настройки логирования
+    log_level: str = Field(default="INFO", description="Уровень логирования")
 
-    # Настройки приложения
-    app_host: str = "0.0.0.0"
-    app_port: int = 8000
-
-    # Допустимые тикеры для валидации
-    @property
-    def valid_tickers(self) -> Tuple[str, str]:
-        """Возвращает кортеж допустимых тикеров."""
-        return ("btc_usd", "eth_usd")
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
 
 
-@lru_cache()
 def get_settings() -> Settings:
-    """
-    Получить кэшированный экземпляр настроек.
-
-    Использование lru_cache гарантирует:
-    - Создание одного экземпляра (кеширование)
-    - Отсутствие глобальной переменной
-    - Ленивую загрузку (создание при первом вызове)
-
-    Returns:
-        Settings: Экземпляр конфигурации приложения
-    """
+    """Получить экземпляр настроек."""
     return Settings()
