@@ -25,11 +25,14 @@ from app.schemas.requests import (
 from app.services.price_service import PriceService, get_price_service
 
 
-router = APIRouter(tags=["Цены"])
+router = APIRouter(
+    prefix="/v1/prices",
+    tags=["Цены"]
+)
 
 
 @router.get(
-    "",
+    "/all",
     response_model=List[PriceRecordResponse],
     summary="Получить все цены по тикеру",
     description="Возвращает все сохранённые записи о ценах для указанной криптовалюты."

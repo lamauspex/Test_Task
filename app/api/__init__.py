@@ -9,7 +9,7 @@ from app.api.routes import router as price_tracker_router
 
 
 # Создаем главный API router
-api_router = APIRouter(prefix="/api/v1/prices")
+api_router = APIRouter(prefix="/api")
 
 
 # Подключаем все роутеры с префиксами
