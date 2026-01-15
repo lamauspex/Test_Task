@@ -1,85 +1,66 @@
-"""
-Точка входа FastAPI приложения.
+""" Точка входа FastAPI приложения """
 
-Настраивает приложение, подключает middleware, роуты и обработчики.
-"""
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from app.api.routes import router
-from app.config.config import get_settings
-from app.database.database import get_database
-from app.middleware.exception_handler import (
-    ExceptionHandlerMiddleware,
-    LoggingMiddleware
-)
+from app.config import settings
+from app.api import api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Управление жизненным циклом приложения."""
-    settings = get_settings()
 
-    # Инициализация базы данных
     print("Инициализация базы данных...")
-    db = get_database()
-    await db.init(settings.database_url)
-    await db.create_tables()
-    print("База данных инициализирована")
+    # Инициализация БД происходит автоматически при первом подключении
+    print("База данных готова")
 
     yield
 
     # Очистка ресурсов
-    print("Закрытие подключений к базе данных...")
-    await db.close()
     print("Приложение остановлено")
 
 
-# Создание приложения FastAPI
+# Инициализируем FastAPI
 app = FastAPI(
-    title="Crypto Price Tracker API",
-    description="API для получения данных о ценах криптовалют с биржи Deribit",
-    version="1.0.0",
-    lifespan=lifespan
+    title=settings.app.API_TITLE,
+    description=settings.app.API_DESCRIPTION,
+    version=settings.app.API_VERSION,
+    docs_url="/docs" if settings.app.API_DOCS_ENABLED else None,
+    redoc_url="/redoc" if settings.app.API_DOCS_ENABLED else None,
 )
 
-# Подключение middleware
-app.add_middleware(ExceptionHandlerMiddleware)
-app.add_middleware(LoggingMiddleware)
-
-# CORS middleware
+# Подключаем middleware для CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В продакшене указать конкретные домены
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Подключение роутов
-app.include_router(router)
+# Подключаем API роутеры
+app.include_router(api_router)
 
 
 @app.get("/")
-async def root() -> dict:
-    """Корневой эндпоинт."""
+async def root():
+    """Корневой эндпоинт"""
     return {
         "message": "Crypto Price Tracker API",
-        "version": "1.0.0",
-        "docs": "/docs"
+        "version": settings.app.API_VERSION,
+        "docs": "/docs" if settings.app.API_DOCS_ENABLED else "Disabled"
     }
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    settings = get_settings()
     uvicorn.run(
         "main:app",
-        host=settings.api_host,
-        port=settings.api_port,
-        reload=True
+        host=settings.app.HOST,
+        port=settings.app.PORT,
+        reload=settings.monitoring.DEBUG
     )

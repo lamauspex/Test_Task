@@ -1,14 +1,16 @@
-""" Базовый конфигурационный класс """
+""" Базовые классы для конфигурации """
 
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import ConfigDict
+from pydantic_settings import BaseSettings
 
 
 class BaseConfig(BaseSettings):
-    """ Базовый конфигурационный класс """
+    """Базовый класс конфигурации с поддержкой переменных окружения"""
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        extra='ignore',
-        validate_assignment=True,
+    model_config = ConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        case_sensitive=True,
+        extra='ignore'
     )

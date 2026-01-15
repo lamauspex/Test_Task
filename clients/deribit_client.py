@@ -1,19 +1,15 @@
-"""
-Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов.
+""" Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов.
 
 Получает индексные цены для BTC/USD и ETH/USD.
 """
 from typing import Dict, NamedTuple
-import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Protocol, runtime_checkable
 
 import aiohttp
 
-from app.config.config import Settings, get_settings
-
-logger = logging.getLogger(__name__)
+from app.config import settings
 
 
 class PriceData(NamedTuple):

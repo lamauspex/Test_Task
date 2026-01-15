@@ -11,7 +11,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.database import get_db
+from app.database import get_db
 from app.schemas.responses import (
     PriceRecordResponse,
     PriceLatestResponse,
@@ -25,10 +25,7 @@ from app.schemas.requests import (
 from app.services.price_service import PriceService, get_price_service
 
 
-router = APIRouter(
-    prefix="/api/v1/prices",
-    tags=["Цены"]
-)
+router = APIRouter(tags=["Цены"])
 
 
 @router.get(

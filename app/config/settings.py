@@ -1,7 +1,11 @@
-""" Центральный объект конфигурации для user_service """
+"""
+Центральный объект конфигурации для crypto price tracker
+"""
 
-
+from .app import app_config
+from .celery import celery_config
 from .database import database_config
+from .deribit import deribit_config
 from .monitoring import monitoring_config
 
 
@@ -12,7 +16,7 @@ class _SettingsHolder:
 
 
 class Settings:
-    """ Центральный объект конфигурации для user_service """
+    """Центральный объект конфигурации"""
 
     def __new__(cls):
         if _SettingsHolder.instance is None:
@@ -25,8 +29,11 @@ class Settings:
         if self._initialized:
             return
 
+        self.app = app_config
         self.database = database_config
         self.monitoring = monitoring_config
+        self.celery = celery_config
+        self.deribit = deribit_config
 
         self._initialized = True
 

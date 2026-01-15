@@ -22,7 +22,7 @@ class DataBaseConfig(BaseConfig):
 
     def get_database_url(
         self,
-        driver: str = "postgresql+psycopg2"
+        driver: str = "postgresql+asyncpg"
     ) -> str:
         """
         Получить URL базы данных с указанным драйвером

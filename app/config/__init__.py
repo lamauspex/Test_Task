@@ -1,7 +1,6 @@
 """
-Конфигурация для User Auth Service
+Конфигурация для Crypto Price Tracker
 """
-
 
 from .settings import settings
 

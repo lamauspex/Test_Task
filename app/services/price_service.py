@@ -5,8 +5,10 @@
 """
 from typing import List, Optional
 
+from app.repositories import PriceRepository
+from app.schemas import PriceRecordResponse
 from clients.deribit_client import DeribitClient, PriceData
-from app.database.database import Database, get_database
+from app.database import DatabaseManager
 from app.middleware.exception_handler import get_business_logger
 
 
@@ -18,14 +20,14 @@ class PriceService:
     Использует Repository pattern для доступа к данным.
 
     Attributes:
-        database: Менеджер подключения к базе данных
+        database_manager: Менеджер подключения к базе данных
         deribit_client: Клиент API Deribit
         business_logger: Логгер для бизнес-операций
     """
 
     def __init__(
         self,
-        database: Database | None = None,
+        database_manager: DatabaseManager | None = None,
         deribit_client: DeribitClient | None = None,
         business_logger=None,
     ) -> None:
@@ -33,18 +35,22 @@ class PriceService:
         Инициализация сервиса цен.
 
         Args:
-            database: Менеджер БД. Если None - создаётся новый.
+            database_manager: Менеджер БД. Если None - используется глобальный.
             deribit_client: Клиент Deribit. Если None - создаётся новый.
-            business_logger: Логгер бизнес-операций. Если None - создаётся новый.
+            business_logger: Логгер бизнес-операций. Если None создаётся новый.
         """
-        self._database = database or get_database()
+        from app.config import settings
+
+        self._database_manager = database_manager or DatabaseManager(
+            settings.database.get_database_url()
+        )
         self._deribit_client = deribit_client or DeribitClient()
         self._business_logger = business_logger or get_business_logger()
 
     @property
-    def database(self) -> Database:
+    def database_manager(self) -> DatabaseManager:
         """Получить менеджер базы данных."""
-        return self._database
+        return self._database_manager
 
     @property
     def deribit_client(self) -> DeribitClient:
@@ -58,9 +64,8 @@ class PriceService:
         Args:
             price_data: Данные о цене от клиента Deribit
         """
-        from app.repositories import PriceRepository
 
-        async with self._database.get_session() as session:
+        async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
             record = await repository.save_price_data(
                 ticker=price_data.ticker,
@@ -82,12 +87,11 @@ class PriceService:
         Returns:
             List[str]: Список тикеров сохранённых записей
         """
-        from app.repositories import PriceRepository
 
         price_data_map = await self._deribit_client.fetch_all_prices()
         saved_tickers = []
 
-        async with self._database.get_session() as session:
+        async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
 
             for ticker, price_data in price_data_map.items():
@@ -122,7 +126,7 @@ class PriceService:
         """
         from app.repositories import PriceRepository
 
-        async with self._database.get_session() as session:
+        async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
             return await repository.get_prices_by_ticker(
                 ticker=ticker,
@@ -142,10 +146,8 @@ class PriceService:
         Returns:
             Optional: Последняя запись о цене в формате DTO или None
         """
-        from app.repositories import PriceRepository
-        from app.schemas import PriceRecordResponse
 
-        async with self._database.get_session() as session:
+        async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
             record = await repository.get_latest_price(ticker)
 
@@ -174,7 +176,7 @@ class PriceService:
         """
         from app.repositories import PriceRepository
 
-        async with self._database.get_session() as session:
+        async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
             return await repository.get_prices_by_date_range(
                 ticker=ticker,

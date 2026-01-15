@@ -1,6 +1,6 @@
 """Репозиторий для работы с записями о ценах в базе данных."""
 
-from datetime import datetime
+
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
