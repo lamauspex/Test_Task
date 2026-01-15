@@ -1,4 +1,5 @@
-"""Точка входа FastAPI приложения.
+"""
+Точка входа FastAPI приложения.
 
 Настраивает приложение, подключает middleware, роуты и обработчики.
 """
@@ -9,8 +10,8 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
-from app.config import get_settings
-from app.database import get_database
+from app.config.config import get_settings
+from app.database.database import get_database
 from app.middleware.exception_handler import (
     ExceptionHandlerMiddleware,
     LoggingMiddleware

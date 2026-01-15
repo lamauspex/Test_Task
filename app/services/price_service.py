@@ -6,7 +6,7 @@
 from typing import List, Optional
 
 from clients.deribit_client import DeribitClient, PriceData
-from app.database import Database, get_database
+from app.database.database import Database, get_database
 from app.middleware.exception_handler import get_business_logger
 
 

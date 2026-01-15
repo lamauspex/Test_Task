@@ -11,7 +11,7 @@ from typing import Dict, Protocol, runtime_checkable
 
 import aiohttp
 
-from app.config import Settings, get_settings
+from app.config.config import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 

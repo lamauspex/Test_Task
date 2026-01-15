@@ -17,7 +17,7 @@ from sqlalchemy.orm import close_all_sessions
 from app.models.models_base import Base
 
 if TYPE_CHECKING:
-    from app.config import Settings
+    from app.config.config import Settings
 
 
 class Database:
@@ -51,7 +51,7 @@ class Database:
         Args:
             database_url: URL подключения. Если None - берётся из настроек.
         """
-        from app.config import get_settings
+        from app.config.config import get_settings
 
         settings = self._settings or get_settings()
         url = database_url or settings.database_url
