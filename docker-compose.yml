@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # База данных PostgreSQL
   postgres:
@@ -25,17 +23,24 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Docker/Dockerfile
     container_name: crypto-tracker-app
     ports:
       - "8000:8000"
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/crypto_prices
-      - APP_HOST=0.0.0.0
-      - APP_PORT=8000
-    volumes:
-      - ./app/config:/app/app/config
-      - ./:/app
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=crypto_prices
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=True
+      - TESTING=False
+      - API_DOCS_ENABLED=true
     depends_on:
       postgres:
         condition: service_healthy

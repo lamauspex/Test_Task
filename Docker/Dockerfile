@@ -1,31 +1,38 @@
-# Python базовый образ
-FROM python:3.11-slim
-
-# Установка системных зависимостей
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Используем slim-образ с последней стабильной версией Python
+FROM python:3.12-slim
 
 # Рабочая директория
 WORKDIR /app
 
-# Копирование файлов зависимостей
+# Копируем только requirements.txt для эффективного кеширования
 COPY requirements.txt .
 
-# Установка Python зависимостей
+# Устанавливаем зависимости в отдельном слое
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копирование кода приложения
+# Копируем код приложения
 COPY . .
 
-# Создание директории для celery beat
+# Копируем entrypoint скрипт
+COPY Docker/Docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Создаем директорию для celery beat
 RUN mkdir -p /app/celerybeat-schedule
 
 # Переменные окружения
 ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Порт для FastAPI
 EXPOSE 8000
 
-# Команда запуска (reload для разработки)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Запуск от непривилегированного пользователя
+RUN useradd --create-home --shell /bin/bash appuser
+RUN chown -R appuser:appuser /app
+USER appuser
+
+# Команда запуска
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
