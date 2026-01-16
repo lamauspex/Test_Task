@@ -1,4 +1,5 @@
 
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -17,11 +18,19 @@ class DatabaseManager:
             expire_on_commit=False
         )
 
+    @asynccontextmanager
     async def get_async_db_session(self) -> AsyncSession:
+        """Async context manager для получения сессии БД."""
         async with self.session_factory() as session:
             yield session
 
 
 # Глобальный экземпляр
 database_manager = DatabaseManager(settings.database.get_database_url())
-get_async_db_session = database_manager.get_async_db_session
+
+
+@asynccontextmanager
+async def get_async_db_session() -> AsyncSession:
+    """Async context manager для получения сессии БД."""
+    async with database_manager.session_factory() as session:
+        yield session

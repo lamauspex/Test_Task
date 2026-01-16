@@ -47,16 +47,6 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-@app.get("/")
-async def root():
-    """Корневой эндпоинт"""
-    return {
-        "message": "Crypto Price Tracker API",
-        "version": settings.app.API_VERSION,
-        "docs": "/docs" if settings.app.API_DOCS_ENABLED else "Disabled"
-    }
-
-
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",

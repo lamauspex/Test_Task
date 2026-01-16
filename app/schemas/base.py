@@ -1,8 +1,9 @@
-"""Базовые схемы с валидацией."""
+"""
+Базовые схемы с валидацией
+"""
 
 from typing import Annotated
 
-from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.utils.types import VALID_TICKERS
@@ -26,7 +27,6 @@ class BaseSchema(BaseModel):
 class TickerBase(BaseSchema):
     """Базовая схема с тикером."""
 
-    id: UUID
     ticker: Annotated[str, TickerField]
 
     @field_validator("ticker")

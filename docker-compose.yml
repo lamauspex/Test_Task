@@ -1,4 +1,3 @@
-
 version: "3.8"
 
 services:
@@ -22,20 +21,6 @@ services:
     networks:
       - crypto-network
 
-  # Redis для брокера Celery
-  redis:
-    image: redis:7-alpine
-    container_name: crypto-tracker-redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - crypto-network
-
   # FastAPI приложение
   app:
     build:
@@ -46,59 +31,13 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/crypto_prices
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
-      - FETCH_INTERVAL=60
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+    volumes:
+      - ./app/config:/app/app/config
+      - ./:/app
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - crypto-network
-
-  # Celery воркер
-  celery-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: crypto-tracker-worker
-    command: celery -A tasks.celery worker --loglevel=info
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/crypto_prices
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
-      - FETCH_INTERVAL=60
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - crypto-network
-
-  # Celery beat планировщик
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: crypto-tracker-beat
-    command: celery -A tasks.celery beat --loglevel=info
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/crypto_prices
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
-      - FETCH_INTERVAL=60
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - crypto-network
