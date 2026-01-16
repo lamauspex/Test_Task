@@ -6,8 +6,8 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from app.config import settings
-from app.api import api_router
+from src.config import settings
+from src.api import api_router
 
 
 @asynccontextmanager

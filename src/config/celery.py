@@ -1,9 +1,10 @@
 """ Конфигурация Celery """
 
+from pydantic import Field
 from celery import Celery
 
-from app.config.base import BaseConfig
-from app.config.database import database_config
+from src.config.base import BaseConfig
+from src.config.database import database_config
 
 
 class CeleryConfig(BaseConfig):

@@ -1,7 +1,7 @@
 """ Периодические задачи Celery для получения цен криптовалют """
 
-from app.config.celery import celery_app
-from app.services.price_service import PriceService
+from src.config.celery import celery_app
+from src.services.price_service import PriceService
 
 
 @celery_app.task(bind=True)

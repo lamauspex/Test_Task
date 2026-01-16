@@ -23,14 +23,36 @@ services:
   app:
     build:
       context: .
-      dockerfile: Docker/Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: crypto-tracker-app
     ports:
       - "8000:8000"
-    entrypoint: ["/app/entrypoint.sh"]
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-    env_file:
-      - .env
+    entrypoint: ["/entrypoint.sh"]
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=crypto_prices
+      - HOST=0.0.0.0
+      - PORT=8000
+      - TESTING=False
+      - DEBUG=True
+      - API_DOCS_ENABLED=true
+      - API_TITLE=Crypto Price Tracker API
+      - API_VERSION=1.0.0
+      - API_DESCRIPTION=API для получения данных о ценах криптовалют с биржи Deribit
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+      - STRUCTURED_LOGGING=true
+      - ENABLE_REQUEST_LOGGING=True
+      - ENABLE_EXCEPTION_LOGGING=True
+      - ENABLE_BUSINESS_LOGGING=True
+      - FETCH_INTERVAL=60
+      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
+      - CLIENT_SECRET=
+      - CLIENT_ID=
     depends_on:
       postgres:
         condition: service_healthy

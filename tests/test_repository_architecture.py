@@ -1,14 +1,14 @@
 """Пример теста с новой архитектурой Repository."""
 
-from app.config import settings
-from app.database.database import get_db_session
+from src.config import settings
+from src.database.database import get_db_session
 from sqlalchemy import text
 import pytest
 from unittest.mock import AsyncMock, Mock
 from decimal import Decimal
 
-from app.repositories.price_repository import PriceRepository
-from app.services.price_service import PriceService
+from src.repositories.price_repository import PriceRepository
+from src.services.price_service import PriceService
 from clients.deribit_client import PriceData
 
 

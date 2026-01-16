@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from app.schemas.responses import ErrorResponse
+from src.schemas.responses import ErrorResponse
 
 
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):

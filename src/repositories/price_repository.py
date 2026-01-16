@@ -5,9 +5,9 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.models import PriceRecord
-from app.schemas import PriceRecordResponse
-from app.middleware.exception_handler import get_business_logger
+from src.models.models import PriceRecord
+from src.schemas import PriceRecordResponse
+from src.middleware.exception_handler import get_business_logger
 
 
 class PriceRepository:
