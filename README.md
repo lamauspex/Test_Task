@@ -48,34 +48,6 @@ docker-compose up -d
    - API: http://localhost:8000
    - Документация API: http://localhost:8000/docs
 
-### Ручная установка
-
-```bash
-# Создание виртуального окружения
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# или
-.\venv\Scripts\activate   # Windows
-
-# Установка зависимостей
-pip install -r requirements.txt
-
-# Запуск Redis (требуется для Celery)
-docker run -d -p 6379:6379 redis:alpine
-
-# Запуск миграций базы данных
-alembic upgrade head
-
-# Запуск Celery воркера
-celery -A tasks.celery worker --loglevel=info
-
-# Запуск Celery beat (планировщик)
-celery -A tasks.celery beat --loglevel=info
-
-# Запуск FastAPI приложения
-uvicorn app.main:app --reload
-```
-
 ## API эндпоинты
 
 ### Получить все цены по тикеру
@@ -159,42 +131,68 @@ Celery используется для периодического получе
 ### 7. Стратегия Docker
 
 Конфигурация из двух контейнеров:
-1. **app** - FastAPI + Celery воркер
-2. **postgres** - База данных PostgreSQL
+1. **app** - FastAPI приложение
+2. **postgres** - База данных PostgreSQL (используется как брокер для Celery)
 
-Redis запускается как сервис в Docker Compose для брокера Celery.
+Все сервисы связаны через общую сеть `crypto-network`.
 
 ## Структура проекта
 
 ```
-crypto_price_tracker/
+crypto-price-tracker/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                 # Точка входа FastAPI приложения
-│   ├── config.py               # Управление конфигурацией
-│   ├── database.py             # Асинхронное подключение к БД
-│   ├── models.py               # Модели SQLAlchemy
-│   ├── schemas.py              # Схемы Pydantic
+│   ├── config/                 # Конфигурация
+│   │   ├── __init__.py
+│   │   ├── base.py             # Базовые классы конфигурации
+│   │   ├── settings.py         # Настройки приложения
+│   │   ├── app.py              # Настройки приложения
+│   │   ├── database.py         # Конфигурация БД
+│   │   ├── celery.py           # Конфигурация Celery
+│   │   ├── deribit.py          # Конфигурация Deribit API
+│   │   └── monitoring.py       # Конфигурация мониторинга
+│   ├── database/               # Работа с БД
+│   │   ├── __init__.py
+│   │   ├── database.py         # Менеджер подключений
+│   │   └── dependencies.py     # Зависимости FastAPI
 │   ├── api/
 │   │   ├── __init__.py
 │   │   └── routes.py           # API эндпоинты
-│   └── services/
+│   ├── services/               # Бизнес-логика
+│   │   ├── __init__.py
+│   │   └── price_service.py
+│   ├── repositories/           # Репозитории
+│   │   ├── __init__.py
+│   │   └── price_repository.py
+│   ├── clients/                # Клиенты внешних API
+│   │   ├── __init__.py
+│   │   └── deribit_client.py
+│   ├── schemas/                # Pydantic схемы
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── requests.py
+│   │   └── responses.py
+│   ├── models/                 # Модели SQLAlchemy
+│   │   ├── __init__.py
+│   │   ├── models_base.py
+│   │   ├── models.py
+│   │   ├── mixin/
+│   │   └── decorators/
+│   ├── middleware/             # Middleware
+│   │   ├── __init__.py
+│   │   └── exception_handler.py
+│   └── tasks/                  # Celery задачи
 │       ├── __init__.py
-│       └── price_service.py    # Бизнес-логика
-├── clients/
-│   ├── __init__.py
-│   └── deribit_client.py       # aiohttp клиент Deribit
-├── tasks/
-│   ├── __init__.py
-│   ├── celery.py               # Конфигурация Celery
-│   └── price_fetcher.py        # Периодические задачи
-├── tests/
-│   ├── __init__.py
-│   ├── test_api.py
-│   └── test_client.py
-├── Dockerfile
+│       ├── celery.py
+│       └── price_fetcher.py
+├── Docker/
+│   ├── Dockerfile
+│   └── Docker/
+│       └── entrypoint.sh
 ├── docker-compose.yml
 ├── requirements.txt
+├── .env
 └── .env.example
 ```
 

@@ -1,9 +1,8 @@
-""" Точка входа FastAPI приложения """
+"""FastAPI приложение."""
 
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -14,15 +13,7 @@ from app.api import api_router
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Управление жизненным циклом приложения."""
-
-    print("Инициализация базы данных...")
-    # Инициализация БД происходит автоматически при первом подключении
-    print("База данных готова")
-
     yield
-
-    # Очистка ресурсов
-    print("Приложение остановлено")
 
 
 # Инициализируем FastAPI
@@ -32,6 +23,7 @@ app = FastAPI(
     version=settings.app.API_VERSION,
     docs_url="/docs" if settings.app.API_DOCS_ENABLED else None,
     redoc_url="/redoc" if settings.app.API_DOCS_ENABLED else None,
+    lifespan=lifespan,
 )
 
 # Подключаем middleware для CORS
@@ -45,12 +37,3 @@ app.add_middleware(
 
 # Подключаем API роутеры
 app.include_router(api_router)
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host=settings.app.HOST,
-        port=settings.app.PORT,
-        reload=settings.monitoring.DEBUG
-    )

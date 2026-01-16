@@ -28,19 +28,9 @@ services:
     ports:
       - "8000:8000"
     entrypoint: ["/app/entrypoint.sh"]
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/crypto_prices
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=crypto_prices
-      - HOST=0.0.0.0
-      - PORT=8000
-      - DEBUG=True
-      - TESTING=False
-      - API_DOCS_ENABLED=true
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy

@@ -9,15 +9,14 @@ from app.config.base import BaseConfig
 class DataBaseConfig(BaseConfig):
     """ Конфигурация БД """
 
-    # БАЗА ДАННЫХ (ОБЩИЕ НАСТРОЙКИ)
+    # БАЗА ДАННЫХ
     DB_USER: str = Field(description="Пользователь")
     DB_HOST: str = Field(description="Хост БД")
     DB_PORT: int = Field(description="Порт БД")
     DB_NAME: str = Field(description="Название БД")
     DB_PASSWORD: str = Field(description="Пароль БД")
 
-    # ОКРУЖЕНИЕ И РЕЖИМ ОТЛАДКИ
-    TESTING: bool = Field(description="Тестирование")
+    # ОКРУЖЕНИЕ
     DEBUG: bool = Field(description="Режим отладки")
 
     def get_database_url(
@@ -29,14 +28,10 @@ class DataBaseConfig(BaseConfig):
 
         Args:
             driver: Драйвер базы данных
-            (по умолчанию postgresql+psycopg2)
 
         Returns:
             Сформированный URL базы данных
         """
-
-        if self.TESTING:
-            return "sqlite:///:memory:"
 
         return (
             f"{driver}://{self.DB_USER}:{self.DB_PASSWORD}@"

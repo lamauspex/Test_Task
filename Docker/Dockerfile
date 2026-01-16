@@ -17,9 +17,6 @@ COPY . .
 COPY Docker/Docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Создаем директорию для celery beat
-RUN mkdir -p /app/celerybeat-schedule
-
 # Переменные окружения
 ENV PYTHONPATH=/app
 ENV PYTHONDONTWRITEBYTECODE=1

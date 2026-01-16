@@ -6,11 +6,12 @@ from pydantic_settings import BaseSettings
 
 
 class BaseConfig(BaseSettings):
-    """Базовый класс конфигурации с поддержкой переменных окружения"""
+    """
+    Базовый класс конфигурации с поддержкой переменных окружения.
+    Конфигурация загружается ТОЛЬКО из переменных окружения Docker.
+    """
 
     model_config = ConfigDict(
-        env_file='.env',
-        env_file_encoding='utf-8',
         case_sensitive=True,
         extra='ignore'
     )
