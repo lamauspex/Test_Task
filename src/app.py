@@ -1,4 +1,7 @@
-"""FastAPI приложение."""
+"""
+FastAPI приложение
+"""
+
 
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -6,8 +9,13 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from src.config import settings
-from src.api import api_router
+from .config import settings
+from .api import api_router
+from .middleware import (
+    ExceptionHandlerMiddleware,
+    LoggingMiddleware,
+    setup_logging
+)
 
 
 @asynccontextmanager
@@ -25,6 +33,24 @@ app = FastAPI(
     redoc_url="/redoc" if settings.app.API_DOCS_ENABLED else None,
     lifespan=lifespan,
 )
+
+
+# Инициализируем логгер один раз
+app_logger = setup_logging()
+
+# Подключаем middleware для обработки исключений
+if settings.monitoring.ENABLE_EXCEPTION_LOGGING:
+    app.add_middleware(
+        ExceptionHandlerMiddleware,
+        logger=app_logger
+    )
+
+# Подключаем middleware для логирования запросов
+if settings.monitoring.ENABLE_REQUEST_LOGGING:
+    app.add_middleware(
+        LoggingMiddleware,
+        logger=app_logger
+    )
 
 # Подключаем middleware для CORS
 app.add_middleware(

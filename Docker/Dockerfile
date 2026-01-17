@@ -12,9 +12,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-# Копируем entrypoint скрипт
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Копируем entrypoint скрипт в /usr/local/bin (не перезаписывается volume mount)
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Переменные окружения
 ENV PYTHONPATH=/app
@@ -30,4 +30,4 @@ RUN useradd --create-home --shell /bin/bash appuser
 USER appuser
 
 # Команда запуска
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

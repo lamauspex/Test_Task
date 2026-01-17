@@ -29,7 +29,7 @@ services:
       - "8000:8000"
     volumes: 
         - .:/app
-    entrypoint: [ "/entrypoint.sh" ]
+    entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
     command: ["python", "-m", "src.main"]
     environment:
       - PYTHONPATH=/app

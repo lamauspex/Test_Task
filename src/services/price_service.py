@@ -4,13 +4,14 @@
 Обрабатывает операции с базой данных для записей о ценах через репозиторий.
 """
 
-from typing import List, Optional
+from typing import List
 
 from src.config import settings
+from src.exceptions.exceptions import PriceNotFoundError
+from src.middleware.business import get_business_logger
 from src.repositories import PriceRepository
 from src.schemas import PriceRecordResponse
 from src.database import DatabaseManager
-from src.middleware.exception_handler import get_business_logger
 from clients.deribit_client import DeribitClient, PriceData
 
 
@@ -22,9 +23,9 @@ class PriceService:
     Использует Repository pattern для доступа к данным.
 
     Attributes:
-        database_manager: Менеджер подключения к базе данных
-        deribit_client: Клиент API Deribit
-        business_logger: Логгер для бизнес-операций
+        database_manager: Менеджер БД. Если None - используется глобальный.
+        deribit_client: Клиент Deribit. Если None - создаётся новый.
+        business_logger: Логгер бизнес-операций. Если None создаётся новый.
     """
 
     def __init__(
@@ -33,14 +34,7 @@ class PriceService:
         deribit_client: DeribitClient | None = None,
         business_logger=None,
     ) -> None:
-        """
-        Инициализация сервиса цен.
-
-        Args:
-            database_manager: Менеджер БД. Если None - используется глобальный.
-            deribit_client: Клиент Deribit. Если None - создаётся новый.
-            business_logger: Логгер бизнес-операций. Если None создаётся новый.
-        """
+        """ Инициализация сервиса цен """
 
         self._database_manager = database_manager or DatabaseManager(
             settings.database.get_database_url()
@@ -135,8 +129,9 @@ class PriceService:
             )
 
     async def get_latest_price(
-        self, ticker: str
-    ) -> Optional:
+        self,
+        ticker: str
+    ) -> PriceRecordResponse:
         """
         Получить последнюю цену для тикера через репозиторий.
 
@@ -144,16 +139,19 @@ class PriceService:
             ticker: Пара криптовалют
 
         Returns:
-            Optional: Последняя запись о цене в формате DTO или None
-        """
+            PriceRecordResponse: Последняя запись о цене в формате DTO
 
+        Raises:
+            PriceNotFoundError: Если данные о цене не найдены
+        """
         async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
             record = await repository.get_latest_price(ticker)
 
-            if record:
-                return PriceRecordResponse.model_validate(record)
-            return None
+            if not record:
+                raise PriceNotFoundError(ticker)
+
+            return PriceRecordResponse.model_validate(record)
 
     async def get_prices_by_date_range(
         self,

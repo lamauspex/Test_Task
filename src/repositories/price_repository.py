@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import PriceRecord
 from src.schemas import PriceRecordResponse
-from src.middleware.exception_handler import get_business_logger
 
 
 class PriceRepository:
@@ -22,7 +21,6 @@ class PriceRepository:
             session: Асинхронная сессия базы данных
         """
         self._session = session
-        self._business_logger = get_business_logger()
 
     async def save_price_data(
         self, ticker: str, price: float, timestamp: int
@@ -47,13 +45,6 @@ class PriceRepository:
         self._session.add(record)
         await self._session.commit()
         await self._session.refresh(record)
-
-        # Логирование через централизованный логгер
-        self._business_logger.log_price_saved(
-            ticker=record.ticker,
-            price=record.price,
-            timestamp=record.timestamp
-        )
 
         return record
 

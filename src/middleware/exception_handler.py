@@ -1,15 +1,16 @@
-"""Middleware для обработки исключений и логирования."""
+"""Middleware для обработки исключений """
 
+import traceback
 from typing import Any, Callable
 import logging
-import traceback
-from datetime import datetime
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
+from src.config import settings
 from src.schemas.responses import ErrorResponse
+from src.exceptions.exceptions import PriceNotFoundError
 
 
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
@@ -18,27 +19,25 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI, logger: logging.Logger | None = None):
         super().__init__(app)
         self.logger = logger or logging.getLogger(__name__)
+        self.enabled = settings.monitoring.ENABLE_EXCEPTION_LOGGING
 
     async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Any]
+        self,
+        request: Request,
+        call_next: Callable[[Request], Any]
     ) -> Response:
         """Обработка всех исключений."""
+
+        if not self.enabled:
+            return await call_next(request)
+
         try:
             return await call_next(request)
-        except ValueError as e:
-            # Ошибки валидации данных
-            self.logger.warning(f"Validation error: {str(e)}")
+        except PriceNotFoundError as e:
+            self.logger.warning(f"Price not found: {e.ticker}")
             return JSONResponse(
-                status_code=400,
-                content=ErrorResponse(detail=str(e)).model_dump()
-            )
-        except KeyError as e:
-            # Отсутствующие ключи
-            self.logger.warning(f"Key error: {str(e)}")
-            return JSONResponse(
-                status_code=400,
-                content=ErrorResponse(
-                    detail=f"Missing required parameter: {str(e)}").model_dump()
+                status_code=404,
+                content={"detail": str(e)}
             )
         except Exception as e:
             # Непредвиденные ошибки
@@ -49,69 +48,3 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
                 content=ErrorResponse(
                     detail="Internal server error").model_dump()
             )
-
-
-class LoggingMiddleware(BaseHTTPMiddleware):
-    """Middleware для логирования HTTP запросов."""
-
-    def __init__(self, app: FastAPI, logger: logging.Logger | None = None):
-        super().__init__(app)
-        self.logger = logger or logging.getLogger(__name__)
-
-    async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Any]
-    ) -> Response:
-        """Логирование входящих запросов."""
-        # Логирование входящего запроса
-        self.logger.info(
-            f"Request: {request.method} {request.url.path} - "
-            f"Client: {request.client.host if request.client else 'Unknown'}"
-        )
-
-        # Выполнение запроса
-        response = await call_next(request)
-
-        # Логирование ответа
-        self.logger.info(
-            f"Response: {response.status_code} - "
-            f"Path: {request.url.path}"
-        )
-
-        return response
-
-
-class BusinessLogicLogger:
-    """Централизованное логирование бизнес-логики приложения."""
-
-    def __init__(self, logger: logging.Logger | None = None):
-        self.logger = logger or logging.getLogger(__name__)
-
-    def log_price_saved(self, ticker: str, price: float, timestamp: int) -> None:
-        """Логирование сохранения цены."""
-        self.logger.debug(
-            f"Сохранена запись о цене: {ticker} = {price} "
-            f"@ {datetime.fromtimestamp(timestamp)}"
-        )
-
-    def log_prices_saved(self, tickers: list[str]) -> None:
-        """Логирование сохранения множественных цен."""
-        self.logger.info(
-            f"Сохранены цены для тикеров: {', '.join(tickers)}"
-        )
-
-
-# Глобальный инстанс логгера бизнес-логики
-_business_logger: BusinessLogicLogger | None = None
-
-
-def get_business_logger() -> BusinessLogicLogger:
-    """
-    Получить инстанс бизнес-логгера.
-
-    Returns:
-        BusinessLogicLogger: Инстанс логгера
-    """
-    global _business_logger
-    if _business_logger is None:
-        _business_logger = BusinessLogicLogger()
-    return _business_logger
