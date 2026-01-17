@@ -1,7 +1,10 @@
 """ Базовый класс для всех моделей """
 
 
-from sqlalchemy.orm import DeclarativeBase, declared_attr
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    declared_attr
+)
 
 from .mixin import (
     TimestampMixin,

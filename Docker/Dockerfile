@@ -1,6 +1,8 @@
 # Используем slim-образ с последней стабильной версией Python
 FROM python:3.12-slim
 
+# Устанавливаем postgresql-client для pg_isready
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Рабочая директория
 WORKDIR /app
@@ -8,7 +10,6 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
 
 COPY . .
 # Копируем entrypoint скрипт
@@ -23,10 +24,10 @@ ENV PYTHONUNBUFFERED=1
 # Порт для FastAPI
 EXPOSE 8000
 
-# Запуск
+# Создаём пользователя (без chown -R, т.к. используем volume mount)
 RUN useradd --create-home --shell /bin/bash appuser
-RUN chown -R appuser:appuser /app
+
 USER appuser
 
 # Команда запуска
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

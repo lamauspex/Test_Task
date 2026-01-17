@@ -29,5 +29,8 @@ class MonitoringConfig(BaseConfig):
         description="Включить логи бизнес-логики"
     )
 
+    # ОКРУЖЕНИЕ
+    DEBUG: bool = Field(description="Режим отладки")
+
 
 monitoring_config = MonitoringConfig()

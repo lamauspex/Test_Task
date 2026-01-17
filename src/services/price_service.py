@@ -6,11 +6,12 @@
 
 from typing import List, Optional
 
+from src.config import settings
 from src.repositories import PriceRepository
 from src.schemas import PriceRecordResponse
-from clients.deribit_client import DeribitClient, PriceData
 from src.database import DatabaseManager
 from src.middleware.exception_handler import get_business_logger
+from clients.deribit_client import DeribitClient, PriceData
 
 
 class PriceService:
@@ -40,7 +41,6 @@ class PriceService:
             deribit_client: Клиент Deribit. Если None - создаётся новый.
             business_logger: Логгер бизнес-операций. Если None создаётся новый.
         """
-        from app.config import settings
 
         self._database_manager = database_manager or DatabaseManager(
             settings.database.get_database_url()
@@ -125,7 +125,6 @@ class PriceService:
         Returns:
             List: Список записей о ценах в формате DTO
         """
-        from app.repositories import PriceRepository
 
         async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)
@@ -175,7 +174,6 @@ class PriceService:
         Returns:
             List: Список записей о ценах в формате DTO
         """
-        from app.repositories import PriceRepository
 
         async with self._database_manager.get_async_db_session() as session:
             repository = PriceRepository(session)

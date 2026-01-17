@@ -16,9 +16,6 @@ class DataBaseConfig(BaseConfig):
     DB_NAME: str = Field(description="Название БД")
     DB_PASSWORD: str = Field(description="Пароль БД")
 
-    # ОКРУЖЕНИЕ
-    DEBUG: bool = Field(description="Режим отладки")
-
     def get_database_url(
         self,
         driver: str = "postgresql+asyncpg"

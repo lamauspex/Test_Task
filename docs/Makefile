@@ -4,6 +4,30 @@
 docker-compose up -d --build
 
 
+
+
+
+
+# Пересобери и перезапусти
+docker-compose build app
+docker-compose up -d
+
+# Зайди в контейнер
+docker-compose exec app bash
+
+# Создай новую миграцию
+alembic revision --autogenerate -m "Initial migration"
+
+# Примени её
+alembic upgrade head
+
+# Выйди
+exit
+
+# Перезапусти контейнер
+docker-compose restart app
+
+
 # Запуск всех сервисов
 up:
 	docker-compose up -d
