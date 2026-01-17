@@ -5,5 +5,6 @@ from .setup_log import setup_logging
 __all__ = [
     'setup_logging',
     'ExceptionHandlerMiddleware',
-    'BusinessLogicLogger'
+    'BusinessLogicLogger',
+    'LoggingMiddleware'
 ]

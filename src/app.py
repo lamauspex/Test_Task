@@ -13,7 +13,6 @@ from .config import settings
 from .api import api_router
 from .middleware import (
     ExceptionHandlerMiddleware,
-    LoggingMiddleware,
     setup_logging
 )
 
@@ -45,12 +44,6 @@ if settings.monitoring.ENABLE_EXCEPTION_LOGGING:
         logger=app_logger
     )
 
-# Подключаем middleware для логирования запросов
-if settings.monitoring.ENABLE_REQUEST_LOGGING:
-    app.add_middleware(
-        LoggingMiddleware,
-        logger=app_logger
-    )
 
 # Подключаем middleware для CORS
 app.add_middleware(
