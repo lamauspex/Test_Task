@@ -4,7 +4,7 @@ Eдиное место для всех зависимостей БД
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.database import get_async_db_session
+from src.database.database import get_async_db_session
 
 
 async def get_db() -> AsyncSession:

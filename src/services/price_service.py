@@ -3,13 +3,14 @@
 
 Обрабатывает операции с базой данных для записей о ценах через репозиторий.
 """
+
 from typing import List, Optional
 
-from app.repositories import PriceRepository
-from app.schemas import PriceRecordResponse
+from src.repositories import PriceRepository
+from src.schemas import PriceRecordResponse
 from clients.deribit_client import DeribitClient, PriceData
-from app.database import DatabaseManager
-from app.middleware.exception_handler import get_business_logger
+from src.database import DatabaseManager
+from src.middleware.exception_handler import get_business_logger
 
 
 class PriceService:

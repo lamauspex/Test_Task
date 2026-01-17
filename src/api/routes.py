@@ -11,18 +11,18 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
-from app.schemas.responses import (
+from src.database import get_db
+from src.schemas.responses import (
     PriceRecordResponse,
     PriceLatestResponse,
     PriceDateRangeResponse
 )
-from app.schemas.requests import (
+from src.schemas.requests import (
     AllPricesQuery,
     LatestPriceQuery,
     DateRangePricesQuery
 )
-from app.services.price_service import PriceService, get_price_service
+from src.services.price_service import PriceService, get_price_service
 
 
 router = APIRouter(
@@ -35,7 +35,8 @@ router = APIRouter(
     "/all",
     response_model=List[PriceRecordResponse],
     summary="Получить все цены по тикеру",
-    description="Возвращает все сохранённые записи о ценах для указанной криптовалюты."
+    description="Возвращает все сохранённые записи \
+        о ценах для указанной криптовалюты."
 )
 async def get_all_prices(
     query: AllPricesQuery = Depends(),
@@ -66,7 +67,8 @@ async def get_all_prices(
     "/latest",
     response_model=PriceLatestResponse,
     summary="Получить последнюю цену по тикеру",
-    description="Возвращает самую свежую запись о цене для указанной криптовалюты."
+    description="Возвращает самую свежую запись \
+        о цене для указанной криптовалюты."
 )
 async def get_latest_price(
     query: LatestPriceQuery = Depends(),
@@ -97,7 +99,8 @@ async def get_latest_price(
     "/date-range",
     response_model=PriceDateRangeResponse,
     summary="Получить цены по диапазону дат",
-    description="Возвращает записи о ценах для тикера в указанном диапазоне UNIX timestamp."
+    description="Возвращает записи о ценах для тикера \
+        в указанном диапазоне UNIX timestamp."
 )
 async def get_prices_by_date_range(
     query: DateRangePricesQuery = Depends(),

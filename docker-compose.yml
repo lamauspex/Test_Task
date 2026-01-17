@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -27,14 +27,17 @@ services:
     container_name: crypto-tracker-app
     ports:
       - "8000:8000"
-    entrypoint: ["/entrypoint.sh"]
-    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes: 
+        - .:/app:/app  
+    entrypoint: [ "/entrypoint.sh" ]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=crypto_prices
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/crypto_prices
       - HOST=0.0.0.0
       - PORT=8000
       - TESTING=False
@@ -61,6 +64,7 @@ services:
 
 volumes:
   postgres_data:
+
 
 networks:
   crypto-network:

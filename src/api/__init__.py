@@ -4,7 +4,7 @@ API router module
 from fastapi import APIRouter
 
 # Импортируем все роутеры
-from app.api.routes import router as price_tracker_router
+from src.api.routes import router as price_tracker_router
 
 
 # Создаем главный API router

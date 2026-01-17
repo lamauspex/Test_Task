@@ -3,7 +3,7 @@
 
 from pydantic import Field
 
-from app.config.base import BaseConfig
+from src.config.base import BaseConfig
 
 
 class DataBaseConfig(BaseConfig):

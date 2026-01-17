@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from src.repositories.price_repository import PriceRepository
 from src.services.price_service import PriceService
-from clients.deribit_client import PriceData
+from src.clients.deribit_client import PriceData
 
 
 class TestPriceRepository:

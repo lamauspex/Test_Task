@@ -28,7 +28,7 @@ celery_app = Celery(
     __name__,
     broker=BROKER_URL,
     backend=RESULT_BACKEND,
-    include=["app.tasks.price_fetcher"]
+    include=["src.tasks.price_fetcher"]
 )
 
 # Конфигурация Celery

@@ -1,4 +1,4 @@
-#!/bin/bash
+
 set -e
 
 echo "Waiting for PostgreSQL..."
@@ -9,14 +9,10 @@ done
 echo "PostgreSQL is ready!"
 
 echo "Applying database migrations..."
+
 alembic upgrade head
 echo "Migrations applied!"
 
-echo "Starting Celery worker..."
-celery -A app.tasks.price_fetcher worker --loglevel=info
-
-echo "Starting Celery beat..."
-celery -A app.tasks.price_fetcher beat --loglevel=info
 
 echo "Starting FastAPI application..."
 exec "$@"

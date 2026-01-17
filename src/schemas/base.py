@@ -6,7 +6,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.utils.types import VALID_TICKERS
+from src.utils.types import VALID_TICKERS
 
 
 # Валидированный тикер через Pydantic Field

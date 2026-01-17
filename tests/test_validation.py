@@ -1,6 +1,7 @@
 """Тесты валидации через Pydantic схемы."""
 
 import pytest
+
 from src.schemas.requests import (
     AllPricesQuery,
     LatestPriceQuery,
