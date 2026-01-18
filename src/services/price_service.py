@@ -1,7 +1,6 @@
 """
-Сервис цен для бизнес-логики операций.
-
-Работает с UnitOfWork для транзакционности.
+Сервис цен для бизнес-логики операций
+Работает с UnitOfWork для транзакционности
 """
 
 from typing import List
@@ -14,32 +13,21 @@ from clients.deribit_client import DeribitClient, PriceData
 
 
 class PriceService:
-    """
-    Сервис для операций с ценами.
-
-    Принимает UnitOfWork для единой транзакции.
-    Использует DeribitClient для получения внешних данных.
-
-    Attributes:
-        deribit_client: Клиент Deribit API.
-    """
+    """ Сервис для операций с ценами """
 
     def __init__(
         self,
         deribit_client: DeribitClient | None = None,
     ) -> None:
-        """
-        Инициализация сервиса цен.
+        """ Инициализация сервиса цен """
 
-        Args:
-            deribit_client: Клиент Deribit. Если None — создаётся новый.
-        """
         self._deribit_client = deribit_client or DeribitClient()
         self._business_logger = get_business_logger()
 
     @property
     def deribit_client(self) -> DeribitClient:
-        """Получить клиент Deribit."""
+        """ Получить клиент Deribit """
+
         return self._deribit_client
 
     async def save_price_data(
@@ -47,13 +35,7 @@ class PriceService:
         uow: UnitOfWork,
         price_data: PriceData,
     ) -> None:
-        """
-        Сохранить данные о цене через репозиторий.
-
-        Args:
-            uow: Unit of Work с активной транзакцией
-            price_data: Данные о цене от клиента Deribit
-        """
+        """ Сохранить данные о цене через репозиторий """
         record = await uow.prices.save_price_data(
             ticker=price_data.ticker,
             price=price_data.price,
@@ -71,15 +53,9 @@ class PriceService:
         uow: UnitOfWork,
     ) -> List[str]:
         """
-        Получить все цены с Deribit и сохранить в базу данных.
+        Получить все цены с Deribit и сохранить в базу данных
 
-        Вся операция выполняется в рамках одной транзакции (uow).
-
-        Args:
-            uow: Unit of Work с активной транзакцией
-
-        Returns:
-            List[str]: Список тикеров сохранённых записей
+        Вся операция выполняется в рамках одной транзакции (uow)
         """
         price_data_map = await self._deribit_client.fetch_all_prices()
         saved_tickers = []
@@ -104,16 +80,7 @@ class PriceService:
         offset: int = 0,
     ) -> List[PriceRecordResponse]:
         """
-        Получить записи о ценах для тикера через репозиторий.
-
-        Args:
-            uow: Unit of Work
-            ticker: Пара криптовалют
-            limit: Максимальное количество возвращаемых записей
-            offset: Количество записей для пропуска
-
-        Returns:
-            List[PriceRecordResponse]: Список записей о ценах
+        Получить записи о ценах для тикера через репозиторий
         """
         return await uow.prices.get_prices_by_ticker(
             ticker=ticker,
@@ -127,17 +94,8 @@ class PriceService:
         ticker: str,
     ) -> PriceRecordResponse:
         """
-        Получить последнюю цену для тикера через репозиторий.
+        Получить последнюю цену для тикера через репозиторий
 
-        Args:
-            uow: Unit of Work
-            ticker: Пара криптовалют
-
-        Returns:
-            PriceRecordResponse: Последняя запись о цене
-
-        Raises:
-            PriceNotFoundError: Если данные о цене не найдены
         """
         record = await uow.prices.get_latest_price(ticker)
 
@@ -155,17 +113,7 @@ class PriceService:
         limit: int = 1000,
     ) -> List[PriceRecordResponse]:
         """
-        Получить записи о ценах для тикера в диапазоне дат.
-
-        Args:
-            uow: Unit of Work
-            ticker: Пара криптовалют
-            start_date: Начальная дата (UNIX timestamp)
-            end_date: Конечная дата (UNIX timestamp)
-            limit: Максимальное количество записей
-
-        Returns:
-            List[PriceRecordResponse]: Список записей о ценах
+        Получить записи о ценах для тикера в диапазоне дат
         """
         return await uow.prices.get_prices_by_date_range(
             ticker=ticker,
@@ -177,9 +125,6 @@ class PriceService:
 
 def get_price_service() -> PriceService:
     """
-    Фабрика для получения инстанса сервиса цен.
-
-    Returns:
-        PriceService: Инстанс сервиса цен
+    Фабрика для получения инстанса сервиса цен
     """
     return PriceService()

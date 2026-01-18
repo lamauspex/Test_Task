@@ -35,8 +35,12 @@ class CeleryConfig(BaseConfig):
 
     @property
     def result_backend(self) -> str:
-        """Получить URL бэкенда результатов для Redis."""
-        return f"redis://{redis_config.HOST}:{redis_config.PORT}/{redis_config.DB + 1}"
+        """Получить URL бэкенда результатов для Redis"""
+
+        return (
+            f"redis://{redis_config.HOST}:"
+            f"{redis_config.PORT}/{redis_config.DB + 1}"
+        )
 
 
-celery_config = CeleryConfig()
+__all__ = ['CeleryConfig']

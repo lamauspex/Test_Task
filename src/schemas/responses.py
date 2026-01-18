@@ -1,4 +1,4 @@
-"""Все схемы ответов API."""
+"""Схемы ответов API."""
 
 from datetime import datetime
 from decimal import Decimal
@@ -10,71 +10,30 @@ from .base import TickerField
 
 
 class PriceRecordResponse(BaseModel):
-    """
-    Схема ответа для записи о цене.
-    Представляет одну запись о цене, возвращаемую API.
-    """
+    """Запись о цене."""
 
     ticker: str = TickerField
-    price: Decimal = Field(
-        ...,
-        description="Цена валюты"
-    )
-    timestamp: int = Field(
-        ...,
-        ge=0,
-        description="Время в UNIX timestamp"
-    )
-    created_at: datetime = Field(
-        ...,
-        description="Время создания записи в БД"
-    )
+    price: Decimal = Field(..., description="Цена валюты")
+    timestamp: int = Field(..., ge=0, description="Время в UNIX timestamp")
+    created_at: datetime = Field(..., description="Время создания записи в БД")
 
 
 class PriceLatestResponse(BaseModel):
-    """
-    Схема ответа для последней цены.
-    Возвращает самую свежую запись о цене для валюты.
-    """
+    """Последняя цена."""
 
     ticker: str = TickerField
-    price: Decimal = Field(
-        ...,
-        description="Последняя цена валюты"
-    )
-    timestamp: int = Field(
-        ...,
-        ge=0,
-        description="Время в UNIX timestamp"
-    )
-    fetched_at: datetime = Field(
-        ...,
-        description="Время получения цены"
-    )
+    price: Decimal = Field(..., description="Последняя цена валюты")
+    timestamp: int = Field(..., ge=0, description="Время в UNIX timestamp")
+    fetched_at: datetime = Field(..., description="Время получения цены")
 
 
 class PriceDateRangeResponse(BaseModel):
-    """
-    Схема ответа для цен по диапазону дат.
-    Возвращает список записей о ценах в указанном диапазоне.
-    """
+    """Цены по диапазону дат."""
 
     ticker: str = TickerField
-    start_date: int = Field(
-        ...,
-        ge=0,
-        description="Начальная дата диапазона (UNIX timestamp)"
-    )
-    end_date: int = Field(
-        ...,
-        ge=0,
-        description="Конечная дата диапазона (UNIX timestamp)"
-    )
-    count: int = Field(
-        ...,
-        ge=0,
-        description="Количество возвращённых записей"
-    )
+    start_date: int = Field(..., ge=0, description="Начало диапазона")
+    end_date: int = Field(..., ge=0, description="Конец диапазона")
+    count: int = Field(..., ge=0, description="Количество записей")
     prices: List[PriceRecordResponse] = Field(
         default_factory=list,
         description="Список записей о ценах"
@@ -82,12 +41,6 @@ class PriceDateRangeResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    """
-    Схема ответа для ошибок.
-    Стандартная схема для всех HTTP ошибок.
-    """
+    """Ответ об ошибке."""
 
-    detail: str = Field(
-        ...,
-        description="Описание ошибки"
-    )
+    detail: str = Field(..., description="Описание ошибки")

@@ -1,5 +1,4 @@
-""" Базовый класс для всех моделей """
-
+"""Базовые классы моделей SQLAlchemy."""
 
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -14,7 +13,7 @@ from .mixin import (
 
 
 class Base(DeclarativeBase):
-    """ Базовый класс для всех моделей SQLAlchemy """
+    """Базовый класс для всех моделей SQLAlchemy."""
     pass
 
 
@@ -24,9 +23,7 @@ class BaseModel(
     UUIDPrimaryKeyMixin,
     UnixTimestampMixin
 ):
-    """
-    Базовый модель для всех моделей SQLAlchemy
-    """
+    """Базовый модель с предустановленными миксинами."""
 
     __abstract__ = True
 

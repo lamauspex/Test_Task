@@ -33,4 +33,4 @@ class MonitoringConfig(BaseConfig):
     DEBUG: bool = Field(description="Режим отладки")
 
 
-monitoring_config = MonitoringConfig()
+__all__ = ['MonitoringConfig']

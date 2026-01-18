@@ -1,4 +1,4 @@
-
+"""Миксины для моделей"""
 
 from sqlalchemy import BigInteger
 from sqlalchemy.orm import (
@@ -8,6 +8,7 @@ from sqlalchemy.orm import (
 
 
 class UnixTimestampMixin:
+    """Миксин для добавления UNIX timestamp."""
 
     timestamp: Mapped[int] = mapped_column(
         BigInteger,

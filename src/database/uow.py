@@ -1,11 +1,4 @@
-"""
-Unit of Work паттерн для управления транзакциями и сессиями.
-
-Обеспечивает:
-- Единую сессию для всей бизнес-операции
-- Автоматический commit/rollback
-- Централизованное управление репозиториями
-"""
+"""Unit of Work паттерн для управления транзакциями."""
 
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -17,23 +10,9 @@ from src.repositories.price_repository import PriceRepository
 
 
 class UnitOfWork:
-    """
-    Unit of Work для управления транзакциями.
-
-    Использование:
-        async with UnitOfWork(database_manager) as uow:
-            await uow.prices.save_price_data(...)
-            await uow.prices.get_latest_price(...)
-        # Автоматический commit при успехе или rollback при ошибке
-    """
+    """Unit of Work для управления транзакциями и репозиториями."""
 
     def __init__(self, database_manager: DatabaseManager) -> None:
-        """
-        Инициализация UoW.
-
-        Args:
-            database_manager: Менеджер базы данных
-        """
         self._database_manager = database_manager
         self._session: AsyncSession | None = None
         self._prices: PriceRepository | None = None
@@ -47,7 +26,6 @@ class UnitOfWork:
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Выход из контекстного менеджера — коммит или rollback."""
         if exc_type is not None:
-            # Ошибка — откатываем транзакцию
             await self.rollback()
         if self._session is not None:
             await self._session.__aexit__(exc_type, exc_val, exc_tb)
@@ -79,14 +57,6 @@ class UnitOfWork:
 async def get_uow(
     database_manager: DatabaseManager,
 ) -> AsyncGenerator[UnitOfWork, None]:
-    """
-    Фабрика UnitOfWork для использования в FastAPI Depends.
-
-    Args:
-        database_manager: Менеджер базы данных
-
-    Yields:
-        UnitOfWork: Готовый к использованию UnitOfWork
-    """
+    """Фабрика UnitOfWork для использования в FastAPI Depends."""
     async with UnitOfWork(database_manager) as uow:
         yield uow

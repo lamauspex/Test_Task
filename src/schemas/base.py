@@ -1,6 +1,4 @@
-"""
-Базовые схемы с валидацией
-"""
+"""Базовые схемы с валидацией."""
 
 from typing import Annotated
 
@@ -9,7 +7,6 @@ from pydantic import BaseModel, Field, field_validator
 from src.utils.types import VALID_TICKERS
 
 
-# Валидированный тикер через Pydantic Field
 TickerField = Field(
     ...,
     min_length=1,
@@ -36,7 +33,8 @@ class TickerBase(BaseSchema):
         ticker_clean = v.lower().strip()
         if ticker_clean not in VALID_TICKERS:
             raise ValueError(
-                f"Неверный тикер. Допустимые: {', '.join(VALID_TICKERS)}")
+                f"Неверный тикер. Допустимые: {', '.join(VALID_TICKERS)}"
+            )
         return ticker_clean
 
 
@@ -62,7 +60,8 @@ class DateRangeBase(BaseSchema):
         start_date = info.data.get("start_date", 0)
         if v < start_date:
             raise ValueError(
-                "end_date должен быть больше или равен start_date")
+                "end_date должен быть больше или равен start_date"
+            )
         return v
 
 
@@ -81,7 +80,6 @@ class PaginationBase(BaseSchema):
     )
 
 
-# Специализированные схемы для разных целей
 class TickerOnlyRequest(BaseSchema):
     """Запрос только с тикером."""
     ticker: Annotated[str, TickerField]

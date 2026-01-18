@@ -27,4 +27,4 @@ class RedisConfig(BaseConfig):
         return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
 
 
-redis_config = RedisConfig()
+__all__ = ['RedisConfig']

@@ -1,5 +1,4 @@
-"""Репозиторий для работы с записями о ценах в базе данных."""
-
+"""Репозиторий для работы с ценами"""
 
 from typing import Sequence
 
@@ -11,31 +10,16 @@ from src.schemas import PriceRecordResponse
 
 
 class PriceRepository:
-    """Репозиторий для операций с записями о ценах."""
+    """Репозиторий для операций с записями о ценах"""
 
     def __init__(self, session: AsyncSession) -> None:
-        """
-        Инициализация репозитория.
-
-        Args:
-            session: Асинхронная сессия базы данных
-        """
         self._session = session
 
     async def save_price_data(
         self, ticker: str, price: float, timestamp: int
     ) -> PriceRecord:
-        """
-        Сохранить запись о цене в базу данных.
+        """Сохранить запись о цене в БД"""
 
-        Args:
-            ticker: Пара криптовалют (например, 'btc_usd')
-            price: Цена валюты
-            timestamp: Временная метка в UNIX-формате
-
-        Returns:
-            PriceRecord: Созданная запись с присвоенным ID
-        """
         record = PriceRecord(ticker=ticker, price=price, timestamp=timestamp)
         self._session.add(record)
         await self._session.commit()
@@ -48,18 +32,8 @@ class PriceRepository:
         limit: int = 100,
         offset: int = 0
     ) -> Sequence[PriceRecordResponse]:
-        """
-        Получить все записи о ценах для указанного тикера.
+        """Получить записи о ценах для тикера (новые первыми)"""
 
-        Args:
-            ticker: Пара криптовалют (например, 'btc_usd')
-            limit: Максимальное количество записей (по умолчанию 100)
-            offset: Количество записей для пропуска
-
-        Returns:
-            Sequence[PriceRecordResponse]: Список записей, отсортированный
-                по timestamp (новые первыми)
-        """
         query = (
             select(PriceRecord)
             .where(PriceRecord.ticker == ticker)
@@ -72,16 +46,8 @@ class PriceRepository:
         return [PriceRecordResponse.model_validate(r) for r in records]
 
     async def get_latest_price(self, ticker: str) -> PriceRecord | None:
-        """
-        Получить последнюю цену для указанного тикера.
+        """Получить последнюю цену для тикера"""
 
-        Args:
-            ticker: Пара криптовалют (например, 'btc_usd')
-
-        Returns:
-            PriceRecord | None: Последняя запись о цене или None,
-                если записей нет
-        """
         query = (
             select(PriceRecord)
             .where(PriceRecord.ticker == ticker)
@@ -98,19 +64,8 @@ class PriceRepository:
         end_date: int,
         limit: int = 100
     ) -> Sequence[PriceRecordResponse]:
-        """
-        Получить записи о ценах для тикера в указанном диапазоне дат.
+        """Получить записи о ценах в диапазоне дат"""
 
-        Args:
-            ticker: Пара криптовалют (например, 'btc_usd')
-            start_date: Начальная дата диапазона (UNIX timestamp)
-            end_date: Конечная дата диапазона (UNIX timestamp)
-            limit: Максимальное количество записей (по умолчанию 100)
-
-        Returns:
-            Sequence[PriceRecordResponse]: Список записей в диапазоне дат,
-                отсортированный по timestamp (новые первыми)
-        """
         query = (
             select(PriceRecord)
             .where(

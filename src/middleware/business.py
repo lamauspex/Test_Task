@@ -1,7 +1,4 @@
-"""
-Lогирование бизнес-логики приложения
-"""
-
+"""Логирование бизнес-логики приложения."""
 import logging
 from datetime import datetime
 
@@ -12,7 +9,6 @@ class BusinessLogicLogger:
     """Централизованное логирование бизнес-логики приложения."""
 
     def __init__(self, logger: logging.Logger | None = None):
-        # Используем настроенный логгер через get_logger
         self.logger = logger or get_logger("business")
 
     def log_price_saved(
@@ -30,6 +26,7 @@ class BusinessLogicLogger:
 
     def log_prices_saved(self, tickers: list[str]) -> None:
         """Логирование сохранения множественных цен."""
+
         self.logger.info(
             f"Сохранены цены для тикеров: {', '.join(tickers)}"
         )
@@ -40,12 +37,8 @@ _business_logger: BusinessLogicLogger | None = None
 
 
 def get_business_logger() -> BusinessLogicLogger:
-    """
-    Получить инстанс бизнес-логгера.
+    """Получить инстанс бизнес-логгера."""
 
-    Returns:
-        BusinessLogicLogger: Инстанс логгера
-    """
     global _business_logger
     if _business_logger is None:
         _business_logger = BusinessLogicLogger()

@@ -1,4 +1,4 @@
-
+"""Миксины для моделей."""
 from uuid import UUID as UUIDType, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column
@@ -7,7 +7,7 @@ from ..decorators import UUIDTypeDecorator
 
 
 class UUIDPrimaryKeyMixin:
-    """Миксин для добавления UUID первичного ключа"""
+    """Миксин для добавления UUID первичного ключа."""
 
     id: Mapped[UUIDType] = mapped_column(
         UUIDTypeDecorator(),

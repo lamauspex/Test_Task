@@ -1,3 +1,4 @@
+"""Декораторы типов для SQLAlchemy"""
 
 from uuid import UUID as UUIDType
 
@@ -7,10 +8,7 @@ from sqlalchemy import TypeDecorator
 
 
 class UUIDTypeDecorator(TypeDecorator):
-    """
-    Декоратор типа для совместимости UUID между SQLite и PostgreSQL
-    В SQLite хранит как строку, в PostgreSQL как нативный UUID
-    """
+    """Декоратор типа для совместимости UUID между SQLite и PostgreSQL."""
 
     impl = String
     cache_ok = True

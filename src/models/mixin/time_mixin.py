@@ -1,4 +1,4 @@
-
+"""Миксины для моделей."""
 import typing as t
 from datetime import datetime
 
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 class TimestampMixin:
-    """Миксин для добавления временных меток с timezone"""
+    """Миксин для добавления временных меток с timezone."""
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

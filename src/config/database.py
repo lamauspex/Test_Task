@@ -36,4 +36,4 @@ class DataBaseConfig(BaseConfig):
         )
 
 
-database_config = DataBaseConfig()
+__all__ = ['DataBaseConfig']

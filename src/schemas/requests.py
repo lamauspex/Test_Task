@@ -1,6 +1,5 @@
 """Параметры запросов."""
 
-
 from pydantic import Field
 
 from .base import (
@@ -11,10 +10,7 @@ from .base import (
 
 
 class DateRangeQueryParams(TickerBase):
-    """
-    Параметры запроса с фильтром по диапазону дат.
-    Расширяет валидацию тикера параметрами диапазона дат.
-    """
+    """Параметры запроса с фильтром по диапазону дат."""
 
     start_date: int = Field(
         ...,
@@ -28,19 +24,16 @@ class DateRangeQueryParams(TickerBase):
     )
 
 
-"""Схемы для запросов API с валидацией."""
-
-
 class AllPricesQuery(TickerWithPaginationRequest):
-    """Схема запроса для получения всех цен по тикеру."""
+    """Запрос всех цен по тикеру."""
     pass
 
 
 class LatestPriceQuery(TickerBase):
-    """Схема запроса для получения последней цены."""
+    """Запрос последней цены."""
     pass
 
 
 class DateRangePricesQuery(DateRangeRequest):
-    """Схема запроса для получения цен по диапазону дат."""
+    """Запрос цен по диапазону дат."""
     pass

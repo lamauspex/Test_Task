@@ -22,12 +22,10 @@ from .requests import (
 )
 
 __all__ = [
-    # Responses
     "PriceRecordResponse",
     "PriceLatestResponse",
     "PriceDateRangeResponse",
     "ErrorResponse",
-    # Base
     "BaseSchema",
     "TickerBase",
     "DateRangeBase",
@@ -35,7 +33,6 @@ __all__ = [
     "TickerOnlyRequest",
     "TickerWithPaginationRequest",
     "DateRangeRequest",
-    # Requests
     "AllPricesQuery",
     "LatestPriceQuery",
     "DateRangePricesQuery"

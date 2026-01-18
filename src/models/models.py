@@ -1,7 +1,4 @@
-"""
-Модели базы данных для приложения crypto price tracker
-Использует SQLAlchemy с асинхронной поддержкой для PostgreSQL
-"""
+"""Модели базы данных для приложения crypto price tracker."""
 
 from decimal import Decimal
 
@@ -18,14 +15,7 @@ from .models_base import BaseModel
 
 
 class PriceRecord(BaseModel):
-    """
-    Модель для хранения записей цен криптовалют
-
-    Атрибуты:
-
-        ticker: Пара криптовалют (btc_usd, eth_usd)
-        price: Текущая цена на момент получения
-    """
+    """Модель для хранения записей цен криптовалют."""
 
     ticker: Mapped[str] = mapped_column(
         String(20),

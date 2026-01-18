@@ -68,19 +68,11 @@ def setup_logger(
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Получить настроенный логгер по имени.
-
-    Args:
-        name: Имя логгера (__name__)
-
-    Returns:
-        Логгер с настройками из setup_logger
-    """
+    """ Получить настроенный логгер по имени """
     return setup_logger(name)
 
 
 # Для обратной совместимости
 def setup_logging() -> logging.Logger:
-    """Настройка root логгера."""
+    """Настройка root логгера"""
     return setup_logger()

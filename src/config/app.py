@@ -1,8 +1,8 @@
-""" Основная конфигурация """
+"""Конфигурация API."""
 
 from pydantic import Field
 
-from .config import BaseConfig
+from src.config.base import BaseConfig
 
 
 class AppConfig(BaseConfig):
@@ -31,4 +31,4 @@ class AppConfig(BaseConfig):
     )
 
 
-app_config = AppConfig()
+__all__ = ["AppConfig"]
