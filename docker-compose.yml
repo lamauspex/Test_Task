@@ -41,7 +41,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: crypto-tracker-celery-worker
-    command: ["celery", "-A", "src.config.celery", "worker", "-l", "info"]
+    command: ["celery", "-A", "src.celery_app", "worker", "-l", "info"]
     volumes:
       - .:/app
     environment:
@@ -56,7 +56,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       - FETCH_INTERVAL=60
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
+      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
     depends_on:
       redis:
         condition: service_healthy
@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: crypto-tracker-celery-beat
-    command: ["celery", "-A", "src.config.celery", "beat", "-l", "info"]
+    command: ["celery", "-A", "src.celery_app", "beat", "-l", "info"]
     volumes:
       - .:/app
     environment:
@@ -86,7 +86,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_DB=0
       - FETCH_INTERVAL=60
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
+      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
     depends_on:
       redis:
         condition: service_healthy
@@ -133,7 +133,7 @@ services:
       - ENABLE_EXCEPTION_LOGGING=True
       - ENABLE_BUSINESS_LOGGING=True
       - FETCH_INTERVAL=60
-      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public/get_index_price
+      - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
       - CLIENT_SECRET=
       - CLIENT_ID=
     depends_on:

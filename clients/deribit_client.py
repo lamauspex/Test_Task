@@ -1,7 +1,6 @@
-""" Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов.
-
-Получает индексные цены для BTC/USD и ETH/USD.
-Документация: https://docs.deribit.com/
+"""
+Клиент API Deribit с использованием aiohttp для асинхронных HTTP-запросов
+Получает индексные цены для BTC/USD и ETH/USD
 """
 import logging
 from dataclasses import dataclass
