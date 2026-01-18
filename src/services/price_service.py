@@ -9,7 +9,7 @@ from src.database.uow import UnitOfWork
 from src.exceptions.exceptions import PriceNotFoundError
 from src.middleware.business import get_business_logger
 from src.schemas import PriceRecordResponse
-from clients.deribit_client import DeribitClient, PriceData
+from clients import DeribitClient, PriceData
 
 
 class PriceService:

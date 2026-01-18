@@ -1,20 +1,24 @@
 # Руководство по установке
 
+## Требования
 
-## 🟢 Установка
+- Docker
+- Docker Compose
+
+## Установка
 
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/lamauspex/Test_Task/blob/master/Dockerfile
+git clone https://gitlab.com/username/crypto_price_tracker.git
+cd crypto_price_tracker
 ```
 
-
-### 2. Запуск с помощью Docker Compose
+### 2. Запуск Docker Compose
 
 ```bash
-# Запуск всех сервисов в фоновом режиме
-docker-compose up -d
+# Сборка и запуск всех сервисов в фоновом режиме
+docker-compose up -d --build
 
 # Просмотр логов
 docker-compose logs -f
@@ -23,20 +27,52 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### 4. Проверка работоспособности
-
-После запуска выполните:
+### 3. Проверка работоспособности
 
 ```bash
-# Проверка статуса контейнеров
+# Статус контейнеров
 docker-compose ps
 
 # Тест API
-curl http://localhost:8000/api/v1/prices?ticker=btc_usd
+curl http://localhost:8000/api/v1/prices/all?ticker=btc_usd
 
-# Проверка Swagger документации
+# Swagger документация
 open http://localhost:8000/docs
 ```
+
+## Сервисы
+
+| Сервис | Порт | Описание |
+|--------|------|----------|
+| app | 8000 | FastAPI приложение |
+| postgres | 5432 | PostgreSQL база данных |
+| redis | 6379 | Redis брокер сообщений |
+| celery-worker | — | Исполнитель задач Celery |
+| celery-beat | — | Планировщик задач Celery |
+
+## Устранение неполадок
+
+### Ошибка подключения к PostgreSQL
+
+```bash
+docker-compose ps
+docker-compose logs postgres
+```
+
+### Ошибка подключения к Redis
+
+```bash
+docker-compose logs redis
+```
+
+### Celery задачи не выполняются
+
+```bash
+docker-compose logs worker
+docker-compose logs beat
+```
+
+См. также: [ARCHITECTURE.md](ARCHITECTURE.md), [TECHNICAL_DOCS.md](TECHNICAL_DOCS.md)
 
 ## 🟢 Режим разработки
 
@@ -88,42 +124,3 @@ celery -A src.celery_app worker -l info
 # Celery Beat
 celery -A src.celery_app beat -l info
 ```
-
-## 🟢 Docker Compose сервисы
-
-| Сервис | Порт | Описание |
-|--------|------|----------|
-| app | 8000 | FastAPI приложение |
-| postgres | 5432 | PostgreSQL база данных |
-| redis | 6379 | Redis брокер сообщений |
-
-## 🟢 Устранение неполадок
-
-### Ошибка подключения к PostgreSQL
-
-```bash
-# Проверьте, что контейнер запущен
-docker-compose ps
-
-# Проверьте логи
-docker-compose logs postgres
-```
-
-### Ошибка подключения к Redis
-
-```bash
-# Проверьте логи Redis
-docker-compose logs redis
-```
-
-### Celery задачи не выполняются
-
-```bash
-# Проверьте логи worker
-docker-compose logs worker
-
-# Убедитесь, что redis запущен
-docker-compose logs redis
-```
-
-См. также: [Частые проблемы](docs/9_TROUBLESHOOTING.md)
