@@ -13,6 +13,7 @@ from .database import database_config
 from .deribit import deribit_config
 from .monitoring import monitoring_config
 from .redis import redis_config
+from .logging import setup_logging
 
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     'deribit_config',
     'monitoring_config',
     'redis_config',
+    'setup_logging'
 ]

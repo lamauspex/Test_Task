@@ -5,12 +5,15 @@ Lогирование бизнес-логики приложения
 import logging
 from datetime import datetime
 
+from src.config.logging import get_logger
+
 
 class BusinessLogicLogger:
     """Централизованное логирование бизнес-логики приложения."""
 
     def __init__(self, logger: logging.Logger | None = None):
-        self.logger = logger or logging.getLogger(__name__)
+        # Используем настроенный логгер через get_logger
+        self.logger = logger or get_logger("business")
 
     def log_price_saved(
         self,

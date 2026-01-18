@@ -25,14 +25,12 @@ class PriceService:
     Attributes:
         database_manager: Менеджер БД. Если None - используется глобальный.
         deribit_client: Клиент Deribit. Если None - создаётся новый.
-        business_logger: Логгер бизнес-операций. Если None создаётся новый.
     """
 
     def __init__(
         self,
         database_manager: DatabaseManager | None = None,
         deribit_client: DeribitClient | None = None,
-        business_logger=None,
     ) -> None:
         """ Инициализация сервиса цен """
 
@@ -40,7 +38,7 @@ class PriceService:
             settings.database.get_database_url()
         )
         self._deribit_client = deribit_client or DeribitClient()
-        self._business_logger = business_logger or get_business_logger()
+        self._business_logger = get_business_logger()
 
     @property
     def database_manager(self) -> DatabaseManager:

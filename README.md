@@ -85,20 +85,30 @@ GET /api/v1/prices/date-range?ticker={btc_usd|eth_usd}&start_date=1704067200&end
 │  │   Redis     │  │  PostgreSQL │  │    App      │              │
 │  │  (Broker)   │  │     (DB)    │  │  (FastAPI)  │              │
 │  └─────────────┘  └─────────────┘  └─────────────┘              │
-│         │                │                  │                    │
-│         └────────────────┼──────────────────┘                    │
-│                          │                                       │
+│         │                │                  │                   │
+│         └────────────────┼──────────────────┘                   │
+│                          │                                      │
 │              ┌───────────┴───────────┐                          │
 │              │      Celery Beat      │  (планировщик задач)     │
 │              └───────────┬───────────┘                          │
-│                          │                                       │
+│                          │                                      │
 │              ┌───────────┴───────────┐                          │
 │              │    Celery Worker      │  (исполнитель задач)     │
 │              └───────────────────────┘                          │
 │                                                                 │
-│  Внешний API: Deribit (https://www.deribit.com/api/v2/public)  │
+│  Внешний API: Deribit (https://www.deribit.com/api/v2/public)   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+Работа логирования:
+app.py
+    ↓
+setup_logging()  ← настраивает root logger с handlers
+    ↓
+Все модули получают настроенные логгеры:
+├── deribit_client.py → logging.getLogger(__name__)  
+├── price_fetcher.py → logging.getLogger(__name__)   
+├── exception_handler.py → logging.getLogger(__name__)  
+└── business.py → get_logger("business")  
 
 ## Решения в архитектуре (Design Decisions)
 
@@ -108,11 +118,6 @@ GET /api/v1/prices/date-range?ticker={btc_usd|eth_usd}&start_date=1704067200&end
 
 **Варианты и причины выбора:**
 
-| Брокер | Плюсы | Минусы |
-|--------|-------|--------|
-| **Redis** ✅ | • In-memory → сверхбыстрый<br>• Простая настройка<br>• Поддержка результатов | Требует отдельный контейнер |
-| RabbitMQ | • Промышленный стандарт<br>• Надёжность | • Сложнее в настройке<br>• Больше ресурсов |
-| PostgreSQL | • Уже есть в стеке | • Нагрузка на БД<br>• Медленнее очереди |
 
 **Вывод:** Redis — оптимальный выбор для тестового задания:
 - Быстрый (in-memory)
