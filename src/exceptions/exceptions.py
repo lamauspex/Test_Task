@@ -8,4 +8,4 @@ class PriceNotFoundError(Exception):
 
     def __init__(self, ticker: str):
         self.ticker = ticker
-        super().__init__(f"Price data not found for ticker: {ticker}")
+        super().__init__(f"Нет данных о цене для {self.ticker}: {ticker}")

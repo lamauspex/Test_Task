@@ -1,3 +1,59 @@
+
+
+
+
+
+
+Ошибка в Celery-задаче
+Python
+
+Применить
+# src/tasks/price_fetcher.py
+@shared_task
+def fetch_all_prices(self):
+    for ticker in ["btc_usd", "eth_usd"]:
+        fetch_price_for_ticker.delay(ticker)  # ❌
+Проблема: Нельзя вызывать .delay() внутри Celery-задачи — это deadlock. Нужно вызывать функцию напрямую.
+
+
+Нет Redis для Celery
+Yaml
+
+Применить
+# docker-compose.yml
+services:
+  postgres:
+    # ...
+  app:
+    # ...
+Проблема: Celery требует брокер (Redis/RabbitMQ), но в compose нет Redis.
+
+
+ Не настроен Celery Beat
+Python
+
+Применить
+# src/config/celery.py
+beat_schedule = {}  # пустой!
+Проблема: Задачи не будут выполняться периодически.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # crypto-price-tracker
 
 Приложение для отслеживания криптовалютных цен, которое получает курсы BTC и ETH с биржи Deribit и предоставляет REST API.

@@ -3,11 +3,6 @@
 # ============================================
 docker-compose up -d --build
 
-
-
-
-
-
 # Пересобери и перезапусти
 docker-compose build app
 docker-compose up -d

@@ -1,9 +1,9 @@
 """Репозиторий для работы с записями о ценах в базе данных."""
 
 
-from typing import List, Optional
+from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import PriceRecord
@@ -29,41 +29,36 @@ class PriceRepository:
         Сохранить запись о цене в базу данных.
 
         Args:
-            ticker: Пара криптовалют
-            price: Цена
-            timestamp: Временная метка
+            ticker: Пара криптовалют (например, 'btc_usd')
+            price: Цена валюты
+            timestamp: Временная метка в UNIX-формате
 
         Returns:
-            PriceRecord: Созданная запись
+            PriceRecord: Созданная запись с присвоенным ID
         """
-        record = PriceRecord(
-            ticker=ticker,
-            price=price,
-            timestamp=timestamp
-        )
-
+        record = PriceRecord(ticker=ticker, price=price, timestamp=timestamp)
         self._session.add(record)
         await self._session.commit()
         await self._session.refresh(record)
-
         return record
 
     async def get_prices_by_ticker(
         self,
         ticker: str,
-        limit: int = 1000,
+        limit: int = 100,
         offset: int = 0
-    ) -> List[PriceRecordResponse]:
+    ) -> Sequence[PriceRecordResponse]:
         """
-        Получить записи о ценах для тикера в формате DTO.
+        Получить все записи о ценах для указанного тикера.
 
         Args:
-            ticker: Пара криптовалют
-            limit: Максимальное количество записей
+            ticker: Пара криптовалют (например, 'btc_usd')
+            limit: Максимальное количество записей (по умолчанию 100)
             offset: Количество записей для пропуска
 
         Returns:
-            List[PriceRecordResponse]: Список DTO записей о ценах
+            Sequence[PriceRecordResponse]: Список записей, отсортированный
+                по timestamp (новые первыми)
         """
         query = (
             select(PriceRecord)
@@ -72,20 +67,20 @@ class PriceRepository:
             .limit(limit)
             .offset(offset)
         )
-
         result = await self._session.execute(query)
         records = result.scalars().all()
         return [PriceRecordResponse.model_validate(r) for r in records]
 
-    async def get_latest_price(self, ticker: str) -> Optional[PriceRecord]:
+    async def get_latest_price(self, ticker: str) -> PriceRecord | None:
         """
-        Получить последнюю цену для тикера.
+        Получить последнюю цену для указанного тикера.
 
         Args:
-            ticker: Пара криптовалют
+            ticker: Пара криптовалют (например, 'btc_usd')
 
         Returns:
-            Optional[PriceRecord]: Последняя запись о цене или None
+            PriceRecord | None: Последняя запись о цене или None,
+                если записей нет
         """
         query = (
             select(PriceRecord)
@@ -93,7 +88,6 @@ class PriceRepository:
             .order_by(PriceRecord.timestamp.desc())
             .limit(1)
         )
-
         result = await self._session.execute(query)
         return result.scalar_one_or_none()
 
@@ -102,31 +96,33 @@ class PriceRepository:
         ticker: str,
         start_date: int,
         end_date: int,
-        limit: int = 1000
-    ) -> List[PriceRecordResponse]:
+        limit: int = 100
+    ) -> Sequence[PriceRecordResponse]:
         """
-        Получить записи о ценах для тикера в диапазоне дат в формате DTO.
+        Получить записи о ценах для тикера в указанном диапазоне дат.
 
         Args:
-            ticker: Пара криптовалют
-            start_date: Начальная дата (UNIX timestamp)
-            end_date: Конечная дата (UNIX timestamp)
-            limit: Максимальное количество записей
+            ticker: Пара криптовалют (например, 'btc_usd')
+            start_date: Начальная дата диапазона (UNIX timestamp)
+            end_date: Конечная дата диапазона (UNIX timestamp)
+            limit: Максимальное количество записей (по умолчанию 100)
 
         Returns:
-            List[PriceRecordResponse]: Список DTO записей о ценах
+            Sequence[PriceRecordResponse]: Список записей в диапазоне дат,
+                отсортированный по timestamp (новые первыми)
         """
         query = (
             select(PriceRecord)
             .where(
-                PriceRecord.ticker == ticker,
-                PriceRecord.timestamp >= start_date,
-                PriceRecord.timestamp <= end_date
+                and_(
+                    PriceRecord.ticker == ticker,
+                    PriceRecord.timestamp >= start_date,
+                    PriceRecord.timestamp <= end_date
+                )
             )
             .order_by(PriceRecord.timestamp.desc())
             .limit(limit)
         )
-
         result = await self._session.execute(query)
         records = result.scalars().all()
         return [PriceRecordResponse.model_validate(r) for r in records]
