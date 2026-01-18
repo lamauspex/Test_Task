@@ -1,59 +1,3 @@
-
-
-
-
-
-
-Ошибка в Celery-задаче
-Python
-
-Применить
-# src/tasks/price_fetcher.py
-@shared_task
-def fetch_all_prices(self):
-    for ticker in ["btc_usd", "eth_usd"]:
-        fetch_price_for_ticker.delay(ticker)  # ❌
-Проблема: Нельзя вызывать .delay() внутри Celery-задачи — это deadlock. Нужно вызывать функцию напрямую.
-
-
-Нет Redis для Celery
-Yaml
-
-Применить
-# docker-compose.yml
-services:
-  postgres:
-    # ...
-  app:
-    # ...
-Проблема: Celery требует брокер (Redis/RabbitMQ), но в compose нет Redis.
-
-
- Не настроен Celery Beat
-Python
-
-Применить
-# src/config/celery.py
-beat_schedule = {}  # пустой!
-Проблема: Задачи не будут выполняться периодически.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # crypto-price-tracker
 
 Приложение для отслеживания криптовалютных цен, которое получает курсы BTC и ETH с биржи Deribit и предоставляет REST API.
@@ -64,45 +8,56 @@ beat_schedule = {}  # пустой!
 - Сохраняет цены в базу данных PostgreSQL
 - REST API для получения данных о ценах с фильтрацией
 - Асинхронный клиент с использованием aiohttp
-- Celery для периодических задач
+- Celery + Redis для периодических задач
 
 ## Стек технологий
 
-- **Бэкенд:** FastAPI, Python 3.11+
+- **Бэкенд:** FastAPI, Python 3.12+
 - **База данных:** PostgreSQL
-- **Очередь задач:** Celery + Redis (брокер)
-- **HTTP клиент:** aiohttp
-- **ORM:** SQLAlchemy
+- **Очередь задач:** Celery + Redis (брокер сообщений)
+- **HTTP клиент:** aiohttp (асинхронный)
+- **ORM:** SQLAlchemy 2.0
 - **Контейнеризация:** Docker, Docker Compose
 
 ## Быстрый старт
 
 ### Требования
 
-- Docker & Docker Compose
+- Docker & Docker Compose v2
 - Git
 
 ### Установка
 
 1. Клонируйте репозиторий:
 ```bash
-git clone <url-репозитория>
+git clone <url-репозитории>
 cd crypto-price-tracker
 ```
 
-2. Создайте файл окружения:
-```bash
-cp .env.example .env
-```
-
-3. Запустите приложение:
+2. Запустите все сервисы:
 ```bash
 docker-compose up -d
 ```
 
-4. Доступ к приложению:
-   - API: http://localhost:8000
-   - Документация API: http://localhost:8000/docs
+3. Проверьте статус сервисов:
+```bash
+docker-compose ps
+```
+
+4. Проверьте логи Celery:
+```bash
+docker-compose logs celery-worker
+docker-compose logs celery-beat
+```
+
+### Доступ к сервисам
+
+| Сервис | URL | Описание |
+|--------|-----|----------|
+| API | http://localhost:8000 | REST API |
+| Swagger Docs | http://localhost:8000/docs | Интерактивная документация |
+| Redis | localhost:6379 | Брокер Celery |
+| PostgreSQL | localhost:5432 | База данных |
 
 ## API эндпоинты
 
@@ -121,145 +76,208 @@ GET /api/v1/prices/latest?ticker={btc_usd|eth_usd}
 GET /api/v1/prices/date-range?ticker={btc_usd|eth_usd}&start_date=1704067200&end_date=1704153600
 ```
 
-## Решения в архитектуре (Design Decisions)
+## Архитектура
 
-### 1. Архитектура
-
-Проект следует принципам **Clean Architecture** с чётким разделением ответственности:
-
-- **app/** - слой приложения FastAPI (контроллеры, маршруты, схемы)
-- **clients/** - клиенты внешних API (клиент Deribit)
-- **tasks/** - задачи Celery для фоновых заданий
-- **services/** - слой бизнес-логики
-
-### 2. Проектирование базы данных
-
-Использование PostgreSQL с ORM SQLAlchemy:
-
-```sql
-CREATE TABLE price_records (
-    id SERIAL PRIMARY KEY,
-    ticker VARCHAR(20) NOT NULL,
-    price DECIMAL(20, 8) NOT NULL,
-    timestamp BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_ticker (ticker),
-    INDEX idx_timestamp (timestamp)
-);
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Docker Network                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   Redis     │  │  PostgreSQL │  │    App      │              │
+│  │  (Broker)   │  │     (DB)    │  │  (FastAPI)  │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│         │                │                  │                    │
+│         └────────────────┼──────────────────┘                    │
+│                          │                                       │
+│              ┌───────────┴───────────┐                          │
+│              │      Celery Beat      │  (планировщик задач)     │
+│              └───────────┬───────────┘                          │
+│                          │                                       │
+│              ┌───────────┴───────────┐                          │
+│              │    Celery Worker      │  (исполнитель задач)     │
+│              └───────────────────────┘                          │
+│                                                                 │
+│  Внешний API: Deribit (https://www.deribit.com/api/v2/public)  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Почему PostgreSQL?**
-- Надёжная реляционная база данных с отличной производительностью
-- Нативная поддержка больших чисел (DECIMAL для цен)
-- Оптимизация индексов для запросов по временным меткам
+## Решения в архитектуре (Design Decisions)
 
-### 3. Асинхронный дизайн
+### 1. Почему Redis для Celery?
 
-- **aiohttp** для неблокирующих HTTP-запросов к API Deribit
-- **asyncpg** для асинхронных операций с базой данных
-- **Асинхронный SQLAlchemy** для ORM операций
+**Проблема:** Celery требует брокера сообщений для передачи задач между beat (планировщиком) и worker (исполнителем).
 
-Это обеспечивает высокую производительность при одновременном получении и сохранении данных.
+**Варианты и причины выбора:**
 
-### 4. Celery для периодических задач
+| Брокер | Плюсы | Минусы |
+|--------|-------|--------|
+| **Redis** ✅ | • In-memory → сверхбыстрый<br>• Простая настройка<br>• Поддержка результатов | Требует отдельный контейнер |
+| RabbitMQ | • Промышленный стандарт<br>• Надёжность | • Сложнее в настройке<br>• Больше ресурсов |
+| PostgreSQL | • Уже есть в стеке | • Нагрузка на БД<br>• Медленнее очереди |
 
-Celery используется для периодического получения цен, так как:
-- Надёжная очередь задач с персистентностью
-- Встроенный планировщик (celery beat)
-- Лёгкое масштабирование между воркерами
-- Интеграция с Redis в качестве брокера
+**Вывод:** Redis — оптимальный выбор для тестового задания:
+- Быстрый (in-memory)
+- Простая интеграция с Celery
+- Минимальные ресурсы
 
-### 5. Почему не глобальные переменные?
+### 2. Почему aiohttp вместо requests?
 
-Глобальные переменные не используются, потому что:
-- Тестируемость: сложно мокать в юнит-тестах
-- Проблемы конкурентности: состояния гонки в асинхронном коде
-- Управление конфигурацией: переменные окружения более гибкие
-- Clean Architecture: зависимости должны быть внедрены
+```python
+# Синхронный (блокирующий)
+import requests
+response = requests.get(url)  # Ждём ответа, блокируем поток
 
-### 6. Pydantic для валидации
+# Асинхронный (неблокирующий)
+import aiohttp
+async with session.get(url) as response:  # Можно делать другие задачи
+    data = await response.json()
+```
 
-Использование схем Pydantic для:
-- Валидация запросов
-- Сериализация ответов
-- Безопасность типов
+**Преимущества для нашей задачи:**
+- Одновременные запросы к API Deribit для BTC и ETH
+- Не блокирует FastAPI во время ожидания ответа внешнего API
+- Меньше потребление ресурсов при высокой нагрузке
 
-### 7. Стратегия Docker
+### 3. Clean Architecture
 
-Конфигурация из двух контейнеров:
-1. **app** - FastAPI приложение
-2. **postgres** - База данных PostgreSQL (используется как брокер для Celery)
+Проект разделён на слои с чёткой ответственностью:
 
-Все сервисы связаны через общую сеть `crypto-network`.
+```
+┌─────────────────────────────────────────────────────┐
+│                    API Layer                         │
+│              (routes.py, schemas.py)                 │
+├─────────────────────────────────────────────────────┤
+│                 Service Layer                        │
+│               (price_service.py)                     │
+├─────────────────────────────────────────────────────┤
+│                Repository Layer                      │
+│             (price_repository.py)                    │
+├─────────────────────────────────────────────────────┤
+│                   Data Layer                         │
+│              (models.py, database.py)                │
+├─────────────────────────────────────────────────────┤
+│                 External API                         │
+│              (deribit_client.py)                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Почему это важно:**
+- Тестируемость: каждый слой можно мокать
+- Заменимость: легко сменить БД или внешний API
+- Чистота кода: каждая часть делает одну вещь
+
+### 4. Почему не глобальные переменные?
+
+Глобальные переменные — антипаттерн в production-коде:
+
+| Проблема | Решение |
+|----------|---------|
+| Сложно тестировать | Dependency Injection |
+| Гонки данных в async | Передача зависимостей |
+| Жёсткая связность | Интерфейсы и абстракции |
+
+**Наш подход:**
+```python
+# ❌ Плохо: глобальная переменная
+db = Database()
+
+# ✅ Хорошо: dependency injection
+async def get_prices(repo: PriceRepository = Depends(get_repo)):
+    return await repo.get_all()
+```
+
+### 5. Почему Pydantic?
+
+- **Валидация на входе:** автоматическая проверка типов
+- **Сериализация:** преобразование в JSON
+- **Type safety:** IDE подсказывает ошибки до запуска
+- **Документация:** схемы → Swagger UI
+
+### 6. Celery Beat + Worker
+
+Для периодических задач используются два компонента:
+
+| Компонент | Роль |
+|-----------|------|
+| **Celery Beat** | Планировщик — запускает задачи по расписанию (каждую минуту) |
+| **Celery Worker** | Исполнитель — выполняет задачи (получает цены, сохраняет в БД) |
+
+```python
+# beat_schedule в celery.py
+beat_schedule = {
+    "fetch-crypto-prices-every-minute": {
+        "task": "src.tasks.price_fetcher.fetch_crypto_prices",
+        "schedule": 60.0,  # каждую минуту
+    },
+}
+```
+
+### 7. Почему PostgreSQL?
+
+- **ACID:** гарантия целостности данных о ценах
+- **DECIMAL:** точные финансовые расчёты без float-погрешностей
+- **Индексы:** быстрые запросы по timestamp и ticker
+- **JSONB:** возможность расширения для дополнительных данных
 
 ## Структура проекта
 
 ```
 crypto-price-tracker/
-├── app/
+├── src/
 │   ├── __init__.py
-│   ├── main.py                 # Точка входа FastAPI приложения
-│   ├── config/                 # Конфигурация
-│   │   ├── __init__.py
+│   ├── main.py                 # Точка входа FastAPI
+│   ├── config/
 │   │   ├── base.py             # Базовые классы конфигурации
-│   │   ├── settings.py         # Настройки приложения
+│   │   ├── settings.py         # Централизованные настройки
 │   │   ├── app.py              # Настройки приложения
-│   │   ├── database.py         # Конфигурация БД
-│   │   ├── celery.py           # Конфигурация Celery
+│   │   ├── database.py         # Конфигурация PostgreSQL
+│   │   ├── celery.py           # Конфигурация Celery + Redis
 │   │   ├── deribit.py          # Конфигурация Deribit API
-│   │   └── monitoring.py       # Конфигурация мониторинга
-│   ├── database/               # Работа с БД
-│   │   ├── __init__.py
+│   │   └── redis.py            # Конфигурация Redis
+│   ├── database/
 │   │   ├── database.py         # Менеджер подключений
 │   │   └── dependencies.py     # Зависимости FastAPI
 │   ├── api/
-│   │   ├── __init__.py
 │   │   └── routes.py           # API эндпоинты
-│   ├── services/               # Бизнес-логика
-│   │   ├── __init__.py
-│   │   └── price_service.py
-│   ├── repositories/           # Репозитории
-│   │   ├── __init__.py
-│   │   └── price_repository.py
-│   ├── clients/                # Клиенты внешних API
-│   │   ├── __init__.py
-│   │   └── deribit_client.py
-│   ├── schemas/                # Pydantic схемы
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── requests.py
-│   │   └── responses.py
-│   ├── models/                 # Модели SQLAlchemy
-│   │   ├── __init__.py
-│   │   ├── models_base.py
-│   │   ├── models.py
-│   │   ├── mixin/
-│   │   └── decorators/
-│   ├── middleware/             # Middleware
-│   │   ├── __init__.py
-│   │   └── exception_handler.py
-│   └── tasks/                  # Celery задачи
-│       ├── __init__.py
-│       ├── celery.py
-│       └── price_fetcher.py
-├── Docker/
+│   ├── services/
+│   │   └── price_service.py    # Бизнес-логика
+│   ├── repositories/
+│   │   └── price_repository.py # Работа с БД
+│   ├── clients/
+│   │   └── deribit_client.py   # Клиент Deribit (aiohttp)
+│   ├── schemas/
+│   │   ├── requests.py         # Pydantic схемы запросов
+│   │   └── responses.py        # Pydantic схемы ответов
+│   ├── models/
+│   │   └── models.py           # SQLAlchemy модели
+│   ├── tasks/
+│   │   └── price_fetcher.py    # Celery задачи
+│   └── exceptions/
+│       └── exceptions.py       # Кастомные исключения
+├── clients/
+│   └── deribit_client.py       # Клиент Deribit (для использования вне DI)
+├── tests/                       # Unit тесты
+├── docker/
 │   ├── Dockerfile
-│   └── Docker/
-│       └── entrypoint.sh
+│   └── entrypoint.sh
 ├── docker-compose.yml
 ├── requirements.txt
-├── .env
-└── .env.example
+└── README.md
 ```
 
 ## Тестирование
 
 ```bash
-# Запуск всех тестов
-pytest tests/ -v
+# Запуск тестов
+docker-compose exec app pytest tests/ -v
 
 # Запуск с покрытием
-pytest tests/ --cov=app --cov=clients --cov=tasks
+docker-compose exec app pytest tests/ --cov=src --cov=clients
+```
+
+## Остановка
+
+```bash
+docker-compose down
 ```
 
 ## Лицензия

@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from src.config.base import BaseConfig
+from .config import BaseConfig
 
 
 class AppConfig(BaseConfig):

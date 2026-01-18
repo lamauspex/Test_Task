@@ -8,14 +8,19 @@ from src.config.base import BaseConfig
 class DeribitConfig(BaseConfig):
     """Конфигурация Deribit API"""
 
+    # Публичный API не требует аутентификации
     CLIENT_ID: str = Field(
-        description="ID клиента Deribit"
+        default="",
+        description="ID клиента Deribit (необязательно для public API)"
     )
     CLIENT_SECRET: str = Field(
-        description="Секрет клиента Deribit"
+        default="",
+        description="Секрет клиента Deribit (необязательно для public API)"
     )
-    DERIBIT_API_URL: str = Field(
-        description="URL Deribit API"
+    API_URL: str = Field(
+        default="https://www.deribit.com/api/v2/public",
+        description="Базовый URL Deribit API",
+        alias="DERIBIT_API_URL"
     )
 
 

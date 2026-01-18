@@ -2,11 +2,14 @@
 Центральный объект конфигурации для crypto price tracker
 """
 
-from .app import app_config
-from .celery import celery_config
-from .database import database_config
-from .deribit import deribit_config
-from .monitoring import monitoring_config
+from ..config import (
+    redis_config,
+    monitoring_config,
+    deribit_config,
+    database_config,
+    celery_config,
+    app_config
+)
 
 
 class _SettingsHolder:
@@ -34,6 +37,7 @@ class Settings:
         self.monitoring = monitoring_config
         self.celery = celery_config
         self.deribit = deribit_config
+        self.redis = redis_config
 
         self._initialized = True
 
