@@ -1,6 +1,6 @@
 """ health_check """
 
-from src.celery_app import celery_app
+from celery_app import celery_app
 
 
 @celery_app.task(bind=True)

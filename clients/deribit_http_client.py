@@ -5,7 +5,7 @@ from typing import Optional
 
 import aiohttp
 
-from src.config import create_settings
+from src.config.settings import create_settings
 from src.exceptions.exceptions import DeribitClientError
 
 

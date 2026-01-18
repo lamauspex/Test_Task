@@ -9,22 +9,21 @@ from fastapi import (
 )
 
 
-from src.database import (
+from database import (
     DatabaseManager,
     UnitOfWork,
     get_db
 )
-from src.schemas.responses import (
+from schemas import (
     PriceRecordResponse,
     PriceLatestResponse,
-    PriceDateRangeResponse
-)
-from src.schemas.requests import (
+    PriceDateRangeResponse,
     AllPricesQuery,
     LatestPriceQuery,
     DateRangePricesQuery
 )
-from src.services.price_service import PriceService
+
+from services import PriceService
 
 
 router = APIRouter(

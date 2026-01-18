@@ -1,0 +1,44 @@
+[tool.black]
+line-length = 100
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+length_sort = true
+sections = [
+    "STDLIB",
+    "EXTERNAL",
+    "FIRSTPARTY",
+    "THIRDPARTY",
+    "LOCALFOLDER"
+]
+known_first_party = ["src"]
+default_section = "THIRDPARTY"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"

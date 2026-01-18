@@ -4,12 +4,10 @@ import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
 
-from src.celery_app import celery_app
-from src.config.celery import celery_config
-from src.config import create_settings
-from src.database.database import DatabaseManager
-from src.database.uow import UnitOfWork
-from src.services.price_service import PriceService
+from celery_app import celery_app
+from config import create_settings, celery_config
+from database import DatabaseManager, UnitOfWork
+from services import PriceService
 
 logger = logging.getLogger(__name__)
 

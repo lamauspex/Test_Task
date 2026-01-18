@@ -4,13 +4,13 @@
 Использование:
     from src.celery_app import celery_app
 
-    celery -A src.celery_app worker -l info
-    celery -A src.celery_app beat -l info
+    celery -A celery_app worker -l info
+    celery -A celery_app beat -l info
 """
 
 from celery import Celery
 
-from src.config.celery import celery_config
+from config import celery_config
 
 
 # Создание Celery app
@@ -18,7 +18,7 @@ celery_app = Celery(
     "crypto_price_tracker",
     broker=celery_config.broker_url,
     backend=celery_config.result_backend,
-    include=["src.tasks.price_fetcher"]
+    include=["tasks.price_fetcher"]
 )
 
 # Конфигурация
@@ -38,7 +38,7 @@ celery_app.conf.update(
     # Настройка beat (планировщика задач)
     beat_schedule={
         "fetch-crypto-prices-every-minute": {
-            "task": "src.tasks.price_fetcher.fetch_crypto_prices",
+            "task": "tasks.price_fetcher.fetch_crypto_prices",
             "schedule": celery_config.FETCH_INTERVAL,
             "options": {"expires": 50}
         },

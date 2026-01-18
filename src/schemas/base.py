@@ -4,7 +4,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
-from src.utils.types import VALID_TICKERS
+from utils import VALID_TICKERS
 
 
 TickerField = Field(

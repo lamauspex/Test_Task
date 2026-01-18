@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from src.config.base import BaseConfig
+from .base import BaseConfig
 
 
 class DeribitConfig(BaseConfig):

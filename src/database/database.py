@@ -1,4 +1,6 @@
-"""Менеджер подключения к базе данных."""
+""" Менеджер подключения к базе данных """
+
+
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -8,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker
 )
 
-from src.config import create_settings
+from config import create_settings
 
 
 class DatabaseManager:

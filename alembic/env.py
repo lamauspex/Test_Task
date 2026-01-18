@@ -1,4 +1,4 @@
-from src.models.models_base import Base
+from .models import Base
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy import engine_from_config

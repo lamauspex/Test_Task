@@ -1,16 +1,17 @@
 """Middleware для обработки исключений """
 
+import logging
 import traceback
 from typing import Any, Callable
-import logging
+
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from src.config import create_settings
-from src.schemas.responses import ErrorResponse
-from src.exceptions.exceptions import PriceNotFoundError
+from config import create_settings
+from schemas import ErrorResponse
+from exceptions import PriceNotFoundError
 
 
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):

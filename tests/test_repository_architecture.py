@@ -1,14 +1,14 @@
-from src.config import settings
-from src.database.database import get_db_session
+from config import settings
+from database.database import get_db_session
 from sqlalchemy import text
 import pytest
 from unittest.mock import AsyncMock, Mock, MagicMock
 from decimal import Decimal
 
-from src.repositories.price_repository import PriceRepository
-from src.services.price_service import PriceService
+from repositories.price_repository import PriceRepository
+from services.price_service import PriceService
 from clients.deribit_client import PriceData
-from src.database.uow import UnitOfWork
+from database.uow import UnitOfWork
 
 
 class TestPriceRepository:
@@ -235,14 +235,14 @@ class TestPriceServiceWithUoW:
 
 def test_database_connection():
     """Тест подключения к БД"""
-    from src.config import settings
+    from config import settings
     assert settings.database.TESTING == True
     assert settings.database.DB_NAME == ":memory:"
 
 
 def test_database_session():
     """Тест получения сессии БД"""
-    from src.database.database import get_db_session
+    from database.database import get_db_session
     from sqlalchemy import text
     with get_db_session() as session:
         assert session is not None
@@ -252,7 +252,7 @@ def test_database_session():
 
 def test_settings_structure():
     """Тест структуры настроек"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings, 'database')
     assert hasattr(settings, 'monitoring')
     assert hasattr(settings, 'app')
@@ -262,14 +262,14 @@ def test_settings_structure():
 
 def test_monitoring_config():
     """Тест настроек мониторинга"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings.monitoring, 'LOG_LEVEL')
     assert hasattr(settings.monitoring, 'DEBUG')
 
 
 def test_app_config():
     """Тест настроек приложения"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings.app, 'API_TITLE')
     assert hasattr(settings.app, 'API_VERSION')
     assert hasattr(settings.app, 'API_DOCS_ENABLED')
@@ -277,7 +277,7 @@ def test_app_config():
 
 def test_database_config():
     """Тест настроек БД"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings.database, 'get_database_url')
     url = settings.database.get_database_url()
     assert url == "sqlite:///:memory:"
@@ -285,7 +285,7 @@ def test_database_config():
 
 def test_celery_config():
     """Тест настроек Celery"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings.celery, 'BROKER_URL')
     assert hasattr(settings.celery, 'RESULT_BACKEND')
     assert hasattr(settings.celery, 'REDIS_URL')
@@ -293,7 +293,7 @@ def test_celery_config():
 
 def test_deribit_config():
     """Тест настроек Deribit"""
-    from src.config import settings
+    from config import settings
     assert hasattr(settings.deribit, 'CLIENT_ID')
     assert hasattr(settings.deribit, 'CLIENT_SECRET')
     assert hasattr(settings.deribit, 'API_URL')

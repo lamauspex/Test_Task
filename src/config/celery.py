@@ -2,8 +2,8 @@
 
 from pydantic import Field
 
-from src.config.base import BaseConfig
-from src.config.redis import redis_config
+from .base import BaseConfig
+from .redis import RedisConfig
 
 
 class CeleryConfig(BaseConfig):
@@ -31,13 +31,14 @@ class CeleryConfig(BaseConfig):
     @property
     def broker_url(self) -> str:
         """Получить URL брокера для Redis."""
-        return redis_config.url
+        redis_cfg = RedisConfig()
+        return redis_cfg.url
 
     @property
     def result_backend(self) -> str:
         """Получить URL бэкенда результатов для Redis"""
-
+        redis_cfg = RedisConfig()
         return (
-            f"redis://{redis_config.HOST}:"
-            f"{redis_config.PORT}/{redis_config.DB + 1}"
+            f"redis://{redis_cfg.HOST}:"
+            f"{redis_cfg.PORT}/{redis_cfg.DB + 1}"
         )

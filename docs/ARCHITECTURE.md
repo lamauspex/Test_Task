@@ -40,7 +40,7 @@
 ### 2. Celery Beat
 - **Назначение:** Планировщик задач
 - **Расписание:** Каждую минуту (`FETCH_INTERVAL: 60.0`)
-- **Задача:** `src.tasks.price_fetcher.fetch_crypto_prices`
+- **Задача:** `tasks.price_fetcher.fetch_crypto_prices`
 
 ### 3. Celery Worker
 - **Назначение:** Исполнитель фоновых задач

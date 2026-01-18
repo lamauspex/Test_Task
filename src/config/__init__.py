@@ -11,6 +11,11 @@ from .redis import RedisConfig
 from .database import DataBaseConfig
 from .settings import Settings, create_settings
 from .app import AppConfig
+from .logging import (
+    setup_logger,
+    get_logger,
+    setup_logging
+)
 
 __all__ = [
     "Settings",
@@ -21,4 +26,7 @@ __all__ = [
     "CeleryConfig",
     "MonitoringConfig",
     "DeribitConfig",
+    "setup_logger",
+    "get_logger",
+    "setup_logging"
 ]

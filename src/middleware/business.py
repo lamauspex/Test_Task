@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime
 
-from src.config.logging import get_logger
+from config import get_logger
 
 
 class BusinessLogicLogger:

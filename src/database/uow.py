@@ -5,8 +5,8 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.database import DatabaseManager
-from src.repositories.price_repository import PriceRepository
+from .database import DatabaseManager
+from repositories import PriceRepository
 
 
 class UnitOfWork:

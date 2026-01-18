@@ -5,10 +5,10 @@
 
 from typing import List
 
-from src.database.uow import UnitOfWork
-from src.exceptions.exceptions import PriceNotFoundError
-from src.middleware.business import get_business_logger
-from src.schemas import PriceRecordResponse
+from database import UnitOfWork
+from exceptions import PriceNotFoundError
+from middleware import get_business_logger
+from schemas import PriceRecordResponse
 from clients import DeribitClient, PriceData
 
 

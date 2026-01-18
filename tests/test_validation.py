@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.schemas.requests import (
+from schemas.requests import (
     AllPricesQuery,
     LatestPriceQuery,
     DateRangePricesQuery

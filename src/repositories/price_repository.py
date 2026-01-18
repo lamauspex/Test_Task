@@ -5,8 +5,8 @@ from typing import Sequence
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import PriceRecord
-from src.schemas import PriceRecordResponse
+from models import PriceRecord
+from schemas import PriceRecordResponse
 
 
 class PriceRepository:

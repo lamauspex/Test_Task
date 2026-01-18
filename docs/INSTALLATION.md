@@ -116,11 +116,11 @@ alembic upgrade head
 
 ```bash
 # FastAPI (с hot reload)
-uvicorn src.main:app --reload
+uvicorn app:app --reload
 
 # Celery Worker
-celery -A src.celery_app worker -l info
+celery -A celery_app worker -l info
 
 # Celery Beat
-celery -A src.celery_app beat -l info
+celery -A celery_app beat -l info
 ```

@@ -2,14 +2,12 @@
 Центральный объект конфигурации для crypto price tracker
 """
 
-from ..config import (
-    RedisConfig,
-    MonitoringConfig,
-    DeribitConfig,
-    DataBaseConfig,
-    CeleryConfig,
-    AppConfig
-)
+from .redis import RedisConfig
+from .monitoring import MonitoringConfig
+from .deribit import DeribitConfig
+from .database import DataBaseConfig
+from .celery import CeleryConfig
+from .app import AppConfig
 
 
 class Settings:
