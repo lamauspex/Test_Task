@@ -1,25 +1,17 @@
-""" Периодические задачи Celery для получения цен криптовалют """
+"""Периодические задачи Celery для получения цен криптовалют"""
 
-import asyncio
 import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
 
 from src.celery_app import celery_app
 from src.config.celery import celery_config
+from src.config import settings
+from src.database.database import DatabaseManager
+from src.database.uow import UnitOfWork
 from src.services.price_service import PriceService
 
 logger = logging.getLogger(__name__)
-
-
-def run_async(coro):
-    """Запустить асинхронный код в синхронной среде Celery."""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
 
 
 @celery_app.task(
@@ -32,6 +24,8 @@ def fetch_crypto_prices(self):
 
     Задача запускается Celery Beat каждую минуту.
     Использует soft_time_limit для graceful shutdown.
+
+    Единая транзакция для всей операции (Unit of Work).
     """
     try:
         self.update_state(
@@ -40,8 +34,15 @@ def fetch_crypto_prices(self):
         )
         logger.info("Starting crypto price fetch task")
 
+        # Единый DatabaseManager на задачу
+        database_manager = DatabaseManager(
+            settings.database.get_database_url())
         service = PriceService()
-        saved_tickers = run_async(service.fetch_and_save_all_prices())
+
+        # Единая транзакция через UoW
+        with UnitOfWork(database_manager) as uow:
+            saved_tickers = service.fetch_and_save_all_prices(uow)
+            uow.commit()
 
         logger.info(
             f"Successfully fetched and saved prices for: {saved_tickers}")
