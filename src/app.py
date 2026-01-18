@@ -11,7 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from .api import api_router
 from .middleware import ExceptionHandlerMiddleware
-from .config import settings, setup_logging
+from .config import create_settings, setup_logging
 
 
 @asynccontextmanager
@@ -22,11 +22,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 # Инициализируем FastAPI
 app = FastAPI(
-    title=settings.app.API_TITLE,
-    description=settings.app.API_DESCRIPTION,
-    version=settings.app.API_VERSION,
-    docs_url="/docs" if settings.app.API_DOCS_ENABLED else None,
-    redoc_url="/redoc" if settings.app.API_DOCS_ENABLED else None,
+    title=create_settings.app.API_TITLE,
+    description=create_settings.app.API_DESCRIPTION,
+    version=create_settings.app.API_VERSION,
+    docs_url="/docs" if create_settings.app.API_DOCS_ENABLED else None,
+    redoc_url="/redoc" if create_settings.app.API_DOCS_ENABLED else None,
     lifespan=lifespan,
 )
 
@@ -35,7 +35,7 @@ app = FastAPI(
 app_logger = setup_logging()
 
 # Подключаем middleware для обработки исключений
-if settings.monitoring.ENABLE_EXCEPTION_LOGGING:
+if create_settings.monitoring.ENABLE_EXCEPTION_LOGGING:
     app.add_middleware(
         ExceptionHandlerMiddleware,
         logger=app_logger

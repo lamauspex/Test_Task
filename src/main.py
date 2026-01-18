@@ -2,12 +2,12 @@
 
 import uvicorn
 
-from src.config import settings
+from src.config import create_settings
 
 if __name__ == "__main__":
     uvicorn.run(
         "src.app:app",
-        host=settings.app.HOST,
-        port=settings.app.PORT,
-        reload=settings.monitoring.DEBUG
+        host=create_settings.app.HOST,
+        port=create_settings.app.PORT,
+        reload=create_settings.monitoring.DEBUG
     )

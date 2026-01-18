@@ -29,6 +29,3 @@ class AppConfig(BaseConfig):
     API_VERSION: str = Field(
         description="Версия API"
     )
-
-
-__all__ = ["AppConfig"]

@@ -19,6 +19,3 @@ class DeribitConfig(BaseConfig):
         description="Базовый URL Deribit API",
         alias="DERIBIT_API_URL"
     )
-
-
-__all__ = ['DeribitConfig']

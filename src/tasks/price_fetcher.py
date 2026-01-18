@@ -6,7 +6,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 from src.celery_app import celery_app
 from src.config.celery import celery_config
-from src.config import settings
+from src.config import create_settings
 from src.database.database import DatabaseManager
 from src.database.uow import UnitOfWork
 from src.services.price_service import PriceService
@@ -36,7 +36,7 @@ def fetch_crypto_prices(self):
 
         # Единый DatabaseManager на задачу
         database_manager = DatabaseManager(
-            settings.database.get_database_url())
+            create_settings.database.get_database_url())
         service = PriceService()
 
         # Единая транзакция через UoW

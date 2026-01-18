@@ -8,7 +8,7 @@ from typing import Dict
 
 import aiohttp
 
-from src.config import settings
+from src.config import create_settings
 from src.exceptions.exceptions import DeribitClientError
 
 
@@ -52,22 +52,18 @@ class DeribitClient(IDeribitClient):
         session: aiohttp.ClientSession | None = None
     ) -> None:
         """
-        Инициализация клиента Deribit.
-
-        Args:
-            settings_obj: Объект настроек. По умолчанию используется глобальный.
-            session: Существующая сессия aiohttp. Если None, создаётся новая.
+        Инициализация клиента Deribit
         """
-        self._settings = settings_obj or settings.deribit
+        self._settings = settings_obj or create_settings.deribit
         self._session = session
 
     @property
     def api_url(self) -> str:
-        """Получить базовый URL API."""
+        """ Получить базовый URL API """
         return self._settings.API_URL
 
     async def _ensure_session(self) -> aiohttp.ClientSession:
-        """Убедиться, что сессия существует."""
+        """ Убедиться, что сессия существует """
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
         return self._session

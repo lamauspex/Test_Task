@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker
 )
 
-from src.config import settings
+from src.config import create_settings
 
 
 class DatabaseManager:
@@ -30,7 +30,7 @@ class DatabaseManager:
 
 
 # Глобальный экземпляр для использования в приложении
-database_manager = DatabaseManager(settings.database.get_database_url())
+database_manager = DatabaseManager(create_settings.database.get_database_url())
 
 
 @asynccontextmanager

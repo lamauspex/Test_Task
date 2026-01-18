@@ -3,43 +3,28 @@
 """
 
 from ..config import (
-    redis_config,
-    monitoring_config,
-    deribit_config,
-    database_config,
-    celery_config,
-    app_config
+    RedisConfig,
+    MonitoringConfig,
+    DeribitConfig,
+    DataBaseConfig,
+    CeleryConfig,
+    AppConfig
 )
-
-
-class _SettingsHolder:
-    """ Холдер для синглтона """
-
-    instance = None
 
 
 class Settings:
     """Центральный объект конфигурации"""
 
-    def __new__(cls):
-        if _SettingsHolder.instance is None:
-            _SettingsHolder.instance = super().__new__(cls)
-            _SettingsHolder.instance._initialized = False
-        return _SettingsHolder.instance
-
     def __init__(self):
-        # Инициализируем только один раз
-        if self._initialized:
-            return
 
-        self.app = app_config
-        self.database = database_config
-        self.monitoring = monitoring_config
-        self.celery = celery_config
-        self.deribit = deribit_config
-        self.redis = redis_config
-
-        self._initialized = True
+        self.app = AppConfig()
+        self.database = DataBaseConfig()
+        self.monitoring = MonitoringConfig()
+        self.celery = CeleryConfig()
+        self.deribit = DeribitConfig()
+        self.redis = RedisConfig()
 
 
-settings = Settings()
+def create_settings(**kwargs) -> Settings:
+    """ Создаёт новый экземпляр """
+    return Settings(**kwargs)

@@ -5,6 +5,7 @@ docker-compose up -d --build
 
 # Пересобери и перезапусти
 docker-compose build app
+# Запуск всех сервисов
 docker-compose up -d
 
 # Зайди в контейнер
@@ -23,13 +24,8 @@ exit
 docker-compose restart app
 
 
-# Запуск всех сервисов
-up:
-	docker-compose up -d
-
 # Остановка всех сервисов
-down:
-	docker-compose down
+docker-compose down
 
 # Перезапуск всех сервисов
 restart: down up

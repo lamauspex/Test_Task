@@ -1,158 +1,311 @@
-# Crypto Price Tracker - Техническая документация
+# Crypto Price Tracker — Техническая документация
 
-## Выполненные требования
+## 🟢 Выполненные требования
 
 ### Обязательные ✅
-1. **Клиент Deribit API** - реализован с использованием aiohttp
-2. **Периодический сбор данных** - Celery + Celery Beat каждые 60 секунд
-3. **Хранение в PostgreSQL** - SQLAlchemy async с asyncpg
-4. **REST API на FastAPI** - 3 GET метода с обязательным query-параметром ticker:
-   - `GET /api/v1/prices?ticker=btc_usd` - все сохранённые данные
-   - `GET /api/v1/prices/latest?ticker=btc_usd` - последняя цена
-   - `GET /api/v1/prices/date-range?ticker=btc_usd&start_date=X&end_date=Y` - фильтр по дате
-5. **Docker Compose** - 4 сервиса (app, worker, beat, postgres, redis)
-6. **README.md** - подробная документация + Design Decisions
+1. Клиент Deribit API — `clients/deribit_client.py` (aiohttp)
+2. Периодический сбор данных — Celery Beat каждые 60 секунд
+3. Хранение в PostgreSQL — SQLAlchemy async + asyncpg
+4. REST API на FastAPI — 3 GET метода с фильтрацией
+5. Docker Compose — 5 сервисов (app, worker, beat, postgres, redis)
 
 ### Необязательные ✅
-1. **aiohttp клиент** - полностью асинхронный HTTP клиент
-2. **Docker (2+ контейнера)** - 5 контейнеров (app, worker, beat, postgres, redis)
-3. **Unit тесты** - структура подготовлена (файл tests/__init__.py)
+1. Полностью асинхронный HTTP-клиент (aiohttp)
+2. Unit-тесты с pytest
 
 ---
 
-## Ключевые архитектурные решения
+## 🟢 Архитектура
 
-### 1. Clean Architecture
 ```
-api/ → services/ → clients/, database/, models/
+┌─────────────────────────────────────────────────────────────┐
+│                      Docker Network                         │
+│  ┌───────────┐  ┌───────────┐  ┌───────────┐                │
+│  │   Redis   │  │PostgreSQL │  │   FastAPI │                │
+│  │  (Broker) │  │    (DB)   │  │   (API)   │                │
+│  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘                │
+│        │              │              │                      │
+│        └──────────────┼──────────────┘                      │
+│                       │                                     │
+│         ┌─────────────┴─────────────┐                       │
+│         │      Celery Beat          │  (планировщик)        │
+│         └─────────────┬─────────────┘                       │
+│                       │                                     │
+│         ┌─────────────┴─────────────┐                       │
+│         │     Celery Worker         │  (исполнитель)        │
+│         └───────────────────────────┘                       │
+│                                                             │
+│Внешний API: Deribit (https://www.deribit.com/api/v2/public) │
+└─────────────────────────────────────────────────────────────┘
 ```
-Зависимости направлены сверху вниз. API не зависит от деталей реализации.
 
-### 2. Dependency Injection через FastAPI Depends
-```python
-# Вместо глобальных переменных
-async def get_all_prices(
-    service: PriceService = Depends(get_price_service),
-    db: AsyncSession = Depends(get_db),
-):
+### Clean Architecture
+
 ```
-Легко тестировать и заменять реализации.
-
-### 3. Протоколы (Protocols) для типизации
-```python
-@runtime_checkable
-class IDeribitClient(Protocol):
-    async def fetch_all_prices(self) -> Dict[str, PriceData]:
-        ...
+┌─────────────────────────────────────────────────────┐
+│                   API Layer                         │
+│              (src/api/routes.py)                    │
+├─────────────────────────────────────────────────────┤
+│                Service Layer                        │
+│          (src/services/price_service.py)            │
+├─────────────────────────────────────────────────────┤
+│               Repository Layer                      │
+│        (src/repositories/price_repository.py)       │
+├─────────────────────────────────────────────────────┤
+│                  Data Layer                         │
+│      (src/models/models.py, database.py)            │
+├─────────────────────────────────────────────────────┤
+│               External API                          │
+│           (clients/deribit_client.py)               │
+└─────────────────────────────────────────────────────┘
 ```
-Позволяет мокать клиенты в тестах.
-
-### 4. Фабрики вместо синглтонов
-```python
-def get_price_service() -> PriceService:
-    return PriceService()
-
-def get_database() -> Database:
-    return Database()
-```
-Каждый запрос получает свежий инстанс.
-
-### 5. Асинхронность везде
-- aiohttp для HTTP клиента
-- asyncpg + SQLAlchemy async для БД
-- asyncio.gather для параллельных запросов
 
 ---
 
-## Структура файлов
+## 🟢 Структура проекта
 
 ```
-crypto_price_tracker/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI app, lifespan management
-│   ├── config.py            # Pydantic Settings
-│   ├── database.py          # Database manager + get_db()
-│   ├── models.py            # SQLAlchemy models (PriceRecord)
-│   ├── schemas.py           # Pydantic schemas
+crypto-price-tracker/
+├── src/
+│   ├── main.py                    # Точка входа FastAPI
+│   ├── celery_app.py              # Инициализация Celery
 │   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py        # API endpoints
-│   └── services/
-│       ├── __init__.py
-│       └── price_service.py # Business logic
+│   │   └── routes.py              # API эндпоинты
+│   ├── clients/
+│   │   └── deribit_client.py      # Клиент Deribit (aiohttp)
+│   ├── config/
+│   │   ├── base.py                # Базовые классы
+│   │   ├── settings.py            # Централизованные настройки
+│   │   ├── app.py                 # Настройки FastAPI
+│   │   ├── database.py            # PostgreSQL
+│   │   ├── celery.py              # Celery + Redis
+│   │   ├── deribit.py             # Deribit API
+│   │   ├── redis.py               # Redis
+│   │   ├── logging.py             # Логирование
+│   │   └── monitoring.py          # Мониторинг
+│   ├── database/
+│   │   ├── database.py            # Менеджер подключений
+│   │   ├── dependencies.py        # FastAPI dependencies
+│   │   └── uow.py                 # Unit of Work
+│   ├── models/
+│   │   └── models.py              # SQLAlchemy модели
+│   ├── repositories/
+│   │   └── price_repository.py    # CRUD операции
+│   ├── schemas/
+│   │   ├── base.py                # Базовые схемы
+│   │   ├── requests.py            # Валидация запросов
+│   │   └── responses.py           # Формат ответов
+│   ├── services/
+│   │   └── price_service.py       # Business Logic
+│   ├── tasks/
+│   │   └── price_fetcher.py       # Celery задача
+│   ├── middleware/
+│   │   ├── exception_handler.py   # Обработка ошибок
+│   │   └── business.py            # Бизнес-логирование
+│   └── exceptions/
+│       └── exceptions.py          # Кастомные исключения
 ├── clients/
-│   ├── __init__.py
-│   └── deribit_client.py    # aiohttp client
-├── tasks/
-│   ├── __init__.py
-│   ├── celery.py            # Celery config
-│   └── price_fetcher.py     # Periodic tasks
+│   └── deribit_client.py          # Клиент Deribit (вне DI)
 ├── tests/
-│   └── __init__.py
-├── Dockerfile
+│   └── test_repository_architecture.py
+├── docker/
+│   ├── Dockerfile
+│   └── entrypoint.sh
 ├── docker-compose.yml
 ├── requirements.txt
-├── .env.example
-├── README.md
-├── ARCHITECTURE.md
-└── check_architecture.py
+└── README.md
 ```
 
 ---
 
-## Запуск
+## 🟢 Ключевые компоненты
 
-### Docker Compose (рекомендуется)
-```bash
-docker-compose up -d
+### 1. Deribit Client (`clients/deribit_client.py`)
+
+Асинхронный HTTP-клиент на aiohttp:
+
+```python
+class DeribitClient:
+    async def fetch_price(self, ticker: str) -> PriceData: ...
+    async def fetch_all_prices(self) -> Dict[str, PriceData]: ...
 ```
 
-### Локально
-```bash
-# 1. Запуск Redis
-docker run -d -p 6379:6379 redis:alpine
+Использует Protocol (`IDeribitClient`) для типизации и мокирования в тестах.
 
-# 2. Запуск PostgreSQL
-docker run -d -p 5432:5432 -e POSTGRES_DB=crypto_prices postgres:15
+### 2. Price Service (`src/services/price_service.py`)
 
-# 3. Установка зависимостей
-pip install -r requirements.txt
+Бизнес-логика с использованием UnitOfWork:
 
-# 4. Celery worker
-celery -A tasks.celery worker --loglevel=info
+```python
+class PriceService:
+    async def fetch_and_save_all_prices(self, uow: UnitOfWork): ...
+    async def get_prices_by_ticker(self, uow: UnitOfWork, ticker: str): ...
+    async def get_latest_price(self, uow: UnitOfWork, ticker: str): ...
+```
 
-# 5. Celery beat
-celery -A tasks.celery beat --loglevel=info
+### 3. Unit of Work (`src/database/uow.py`)
 
-# 6. FastAPI
-uvicorn app.main:app --reload
+Паттерн UoW для управления транзакциями:
+
+```python
+async with UnitOfWork(db) as uow:
+    await uow.prices.save_price_data(...)
+    await uow.commit()  # или автоматический rollback при ошибке
+```
+
+### 4. Celery Tasks (`src/tasks/price_fetcher.py`)
+
+Периодическая задача сбора цен:
+
+```python
+@celery_app.task
+def fetch_crypto_prices():
+    # Получить цены → сохранить в PostgreSQL
 ```
 
 ---
 
-## API Endpoints
+## 🟢 База данных
 
-| Метод | URL | Описание |
-|-------|-----|----------|
-| GET | `/api/v1/prices?ticker=btc_usd` | Все цены тикера |
-| GET | `/api/v1/prices/latest?ticker=btc_usd` | Последняя цена |
-| GET | `/api/v1/prices/date-range?ticker=btc_usd&start_date=1704067200&end_date=1704153600` | Цены по диапазону |
-| GET | `/api/v1/prices/health` | Health check |
+### Модель PriceRecord
+
+```python
+class PriceRecord(BaseModel):
+    ticker: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    price: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), nullable=False)
+    timestamp: Mapped[int]  # Unix timestamp
+```
+
+### Индексы
+
+- `idx_ticker` — поиск по тикеру
+- `idx_timestamp` — фильтрация по времени
 
 ---
 
-## База данных
+## 🟢 API Endpoints
 
-```sql
-CREATE TABLE price_records (
-    id SERIAL PRIMARY KEY,
-    ticker VARCHAR(20) NOT NULL,
-    price DECIMAL(20, 8) NOT NULL,
-    timestamp BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_ticker (ticker),
-    INDEX idx_timestamp (timestamp),
-    INDEX ix_price_records_ticker_timestamp (ticker, timestamp)
-);
+### GET `/api/v1/prices/all`
+
+Получить все записи о ценах для тикера.
+
+**Query parameters:**
+- `ticker` (required): `btc_usd` или `eth_usd`
+- `limit` (optional): лимит записей (по умолчанию 1000)
+- `offset` (optional): смещение для пагинации
+
+**Response:**
+```json
+[
+  {"ticker": "btc_usd", "price": 50000.00, "timestamp": 1705000000, "created_at": "..."}
+]
 ```
+
+### GET `/api/v1/prices/latest`
+
+Получить последнюю цену для тикера.
+
+**Query parameters:**
+- `ticker` (required): `btc_usd` или `eth_usd`
+
+**Response:**
+```json
+{
+  "ticker": "btc_usd",
+  "price": 50000.00,
+  "timestamp": 1705000000,
+  "fetched_at": "..."
+}
+```
+
+### GET `/api/v1/prices/date-range`
+
+Получить цены в диапазоне дат.
+
+**Query parameters:**
+- `ticker` (required): `btc_usd` или `eth_usd`
+- `start_date` (required): начало диапазона (Unix timestamp)
+- `end_date` (required): конец диапазона (Unix timestamp)
+- `limit` (optional): лимит записей
+
+**Response:**
+```json
+{
+  "ticker": "btc_usd",
+  "start_date": 1704067200,
+  "end_date": 1704153600,
+  "count": 10,
+  "prices": [...]
+}
+```
+
+---
+
+## 🟢 Конфигурация
+
+Все настройки через переменные окружения:
+
+| Группа | Переменные |
+|--------|------------|
+| **app** | `HOST`, `PORT`, `DEBUG`, `API_TITLE` |
+| **database** | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` |
+| **celery** | `BROKER_URL`, `RESULT_BACKEND`, `FETCH_INTERVAL` |
+| **deribit** | `DERIBIT_API_URL` |
+| **redis** | `REDIS_HOST`, `REDIS_PORT` |
+| **logging** | `LOG_LEVEL`, `LOG_FORMAT` |
+
+---
+
+## 🟢 Технологический стек
+
+| Компонент | Версия |
+|-----------|--------|
+| FastAPI | 0.128.0 |
+| SQLAlchemy | 2.0.45 |
+| asyncpg | 0.31.0 |
+| Celery | 5.4.0 |
+| aiohttp | 3.13.3 |
+| Pydantic | 2.12.5 |
+| Redis | 5.2.1 |
+| PostgreSQL | 15 |
+| pytest | 9.0.2 |
+
+---
+
+## 🟢 Тестирование
+
+
+
+### Тесты
+
+
+---
+
+## 🟢 Design Decisions
+
+### Почему aiohttp вместо requests?
+
+Асинхронный неблокирующий HTTP-клиент позволяет:
+- Выполнять параллельные запросы к API Deribit
+- Не блокировать FastAPI во время ожидания внешних API
+- Эффективнее использовать ресурсы при высокой нагрузке
+
+### Почему Redis для Celery?
+
+- Быстрый in-memory брокер
+- Простая интеграция с Celery
+- Минимальные ресурсы для тестового задания
+
+### Clean Architecture
+
+Разделение на слои обеспечивает:
+- Тестируемость (каждый слой можно мокать)
+- Заменимость (легко сменить БД или внешний API)
+- Чистоту кода (каждая часть делает одну вещь)
+
+### Dependency Injection
+
+FastAPI `Depends()` для передачи зависимостей:
+- Легко тестировать с моками
+- Нет глобальных переменных
+- Явное управление жизненным циклом
