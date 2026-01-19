@@ -11,7 +11,7 @@ done
 echo "PostgreSQL is ready!"
 
 echo "Applying database migrations..."
-alembic upgrade head
+alembic -c /app/alembic.ini upgrade head
 echo "Migrations applied!"
 
 echo "Starting FastAPI application..."

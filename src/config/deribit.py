@@ -1,6 +1,6 @@
 """ Конфигурация Deribit API """
 
-from pydantic import Field
+from pydantic import Field, AliasChoices
 
 from .base import BaseConfig
 
@@ -15,7 +15,7 @@ class DeribitConfig(BaseConfig):
     CLIENT_SECRET: str = Field(
         description="Секрет клиента Deribit"
     )
-    API_URL: str = Field(
+    DERIBIT_API_URL: str = Field(
         description="Базовый URL Deribit API",
     )
 

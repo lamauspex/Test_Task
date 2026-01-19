@@ -15,7 +15,7 @@ import sys
 import logging
 from typing import Optional
 
-from .settings import create_settings
+from .settings import settings
 
 
 def setup_logger(
@@ -33,10 +33,10 @@ def setup_logger(
         Настроенный логгер
     """
     log_level = getattr(
-        logging, (level or create_settings.monitoring.LOG_LEVEL).upper(),
+        logging, (level or settings.monitoring.LOG_LEVEL).upper(),
         logging.INFO
     )
-    log_format = create_settings.monitoring.LOG_FORMAT
+    log_format = settings.monitoring.LOG_FORMAT
 
     # Получаем логгер
     logger = logging.getLogger(name)
@@ -49,7 +49,7 @@ def setup_logger(
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(log_level)
 
-    if log_format == "json" and create_settings.monitoring.STRUCTURED_LOGGING:
+    if log_format == "json" and settings.monitoring.STRUCTURED_LOGGING:
         handler.setFormatter(
             logging.Formatter(
                 '{"time": "%(asctime)s", "level": "%(levelname)s", '

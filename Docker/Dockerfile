@@ -18,6 +18,8 @@ RUN pip install .
 # Копируем исходный код (после установки зависимостей, для использования кэша слоёв)
 COPY src/ ./
 COPY clients/ ../clients/
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/entrypoint_celery.sh /usr/local/bin/entrypoint_celery.sh
 RUN chmod +x /usr/local/bin/entrypoint_celery.sh

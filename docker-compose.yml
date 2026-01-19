@@ -60,9 +60,23 @@ services:
       - FETCH_SOFT_TIME_LIMIT=55
       - FETCH_RETRY_COUNTDOWN=60
       - FETCH_MAX_RETRIES=3
+      - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
       - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
       - CLIENT_ID=1vjTur19
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+      - STRUCTURED_LOGGING=false
+      - ENABLE_REQUEST_LOGGING=true
+      - ENABLE_EXCEPTION_LOGGING=true
+      - ENABLE_BUSINESS_LOGGING=true
+      - DEBUG=false
+      - HOST=0.0.0.0
+      - PORT=8000
+      - API_DOCS_ENABLED=true
+      - API_TITLE=Crypto Price Tracker API
+      - API_VERSION=1.0.0
+      - API_DESCRIPTION=API для получения данных о ценах криптовалют с биржи Deribit
     depends_on:
       redis:
         condition: service_healthy
@@ -96,9 +110,23 @@ services:
       - FETCH_SOFT_TIME_LIMIT=55
       - FETCH_RETRY_COUNTDOWN=60
       - FETCH_MAX_RETRIES=3
+      - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
       - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
       - CLIENT_ID=1vjTur19
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+      - STRUCTURED_LOGGING=false
+      - ENABLE_REQUEST_LOGGING=true
+      - ENABLE_EXCEPTION_LOGGING=true
+      - ENABLE_BUSINESS_LOGGING=true
+      - DEBUG=false
+      - HOST=0.0.0.0
+      - PORT=8000
+      - API_DOCS_ENABLED=true
+      - API_TITLE=Crypto Price Tracker API
+      - API_VERSION=1.0.0
+      - API_DESCRIPTION=API для получения данных о ценах криптовалют с биржи Deribit
     depends_on:
       redis:
         condition: service_healthy
@@ -145,6 +173,7 @@ services:
       - ENABLE_EXCEPTION_LOGGING=True
       - ENABLE_BUSINESS_LOGGING=True
       - FETCH_INTERVAL=60
+      - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2/public
       - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
       - CLIENT_ID=1vjTur19
