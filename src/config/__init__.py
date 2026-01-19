@@ -4,13 +4,13 @@
 """
 
 
-from .deribit import DeribitConfig
-from .monitoring import MonitoringConfig
-from .celery import CeleryConfig
-from .redis import RedisConfig
-from .database import DataBaseConfig
-from .settings import Settings, create_settings
-from .app import AppConfig
+from .deribit import derbit_config
+from .monitoring import monitoring_config
+from .celery import celery_config
+from .redis import redis_config
+from .database import data_config
+from .settings import Settings
+from .app import app_config
 from .logging import (
     setup_logger,
     get_logger,
@@ -19,13 +19,12 @@ from .logging import (
 
 __all__ = [
     "Settings",
-    "create_settings",
-    "AppConfig",
-    "DataBaseConfig",
-    "RedisConfig",
-    "CeleryConfig",
-    "MonitoringConfig",
-    "DeribitConfig",
+    "app_config",
+    "data_config",
+    "redis_config",
+    "celery_config",
+    "monitoring_config",
+    "derbit_config",
     "setup_logger",
     "get_logger",
     "setup_logging"

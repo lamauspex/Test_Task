@@ -34,3 +34,6 @@ class DataBaseConfig(BaseConfig):
             f"{driver}://{self.DB_USER}:{self.DB_PASSWORD}@"
             f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
+
+
+data_config = DataBaseConfig()

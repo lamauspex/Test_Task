@@ -25,3 +25,6 @@ class RedisConfig(BaseConfig):
     def url(self) -> str:
         """Получить URL подключения к Redis."""
         return f"redis://{self.HOST}:{self.PORT}/{self.DB}"
+
+
+redis_config = RedisConfig()

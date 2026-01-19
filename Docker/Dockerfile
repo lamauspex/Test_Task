@@ -5,16 +5,22 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
 
 # Рабочая директория
-WORKDIR /app
+WORKDIR /app/src
 
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-# Копируем entrypoint скрипт в /usr/local/bin (не перезаписывается volume mount)
+# Копируем только необходимые файлы для установки зависимостей
+COPY pyproject.toml .
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Устанавливаем зависимости из pyproject.toml
+RUN pip install .
+
+# Копируем исходный код (после установки зависимостей, для использования кэша слоёв)
+COPY src/ ./
+COPY clients/ ../clients/
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/entrypoint_celery.sh /usr/local/bin/entrypoint_celery.sh
+RUN chmod +x /usr/local/bin/entrypoint_celery.sh
 
 # Переменные окружения
 ENV PYTHONPATH=/app

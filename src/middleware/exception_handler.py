@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from config import create_settings
+from config import settings
 from schemas import ErrorResponse
 from exceptions import PriceNotFoundError
 
@@ -20,7 +20,7 @@ class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI, logger: logging.Logger | None = None):
         super().__init__(app)
         self.logger = logger or logging.getLogger(__name__)
-        self.enabled = create_settings.monitoring.ENABLE_EXCEPTION_LOGGING
+        self.enabled = settings.monitoring_config.ENABLE_EXCEPTION_LOGGING
 
     async def dispatch(
         self,

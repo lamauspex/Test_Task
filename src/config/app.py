@@ -29,3 +29,6 @@ class AppConfig(BaseConfig):
     API_VERSION: str = Field(
         description="Версия API"
     )
+
+
+app_config = AppConfig()

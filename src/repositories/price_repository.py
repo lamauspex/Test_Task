@@ -20,7 +20,11 @@ class PriceRepository:
     ) -> PriceRecord:
         """Сохранить запись о цене в БД"""
 
-        record = PriceRecord(ticker=ticker, price=price, timestamp=timestamp)
+        record = PriceRecord(
+            ticker=ticker,
+            price=price,
+            timestamp=timestamp
+        )
         self._session.add(record)
         await self._session.commit()
         await self._session.refresh(record)

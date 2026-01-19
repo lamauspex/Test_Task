@@ -10,21 +10,21 @@
 
 from celery import Celery
 
-from config import celery_config
+from config import settings
 
 
 # Создание Celery app
 celery_app = Celery(
     "crypto_price_tracker",
-    broker=celery_config.broker_url,
-    backend=celery_config.result_backend,
+    broker=settings.celery_config.broker_url,
+    backend=settings.celery_config.result_backend,
     include=["tasks.price_fetcher"]
 )
 
 # Конфигурация
 celery_app.conf.update(
-    broker_url=celery_config.broker_url,
-    result_backend=celery_config.result_backend,
+    broker_url=settings.celery_config.broker_url,
+    result_backend=settings.celery_config.result_backend,
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
@@ -39,7 +39,7 @@ celery_app.conf.update(
     beat_schedule={
         "fetch-crypto-prices-every-minute": {
             "task": "tasks.price_fetcher.fetch_crypto_prices",
-            "schedule": celery_config.FETCH_INTERVAL,
+            "schedule": settings.celery_config.FETCH_INTERVAL,
             "options": {"expires": 50}
         },
     },

@@ -5,7 +5,7 @@ from typing import Optional
 
 import aiohttp
 
-from src.config.settings import create_settings
+from src.config.settings import settings
 from src.exceptions.exceptions import DeribitClientError
 
 
@@ -25,7 +25,7 @@ class DeribitHttpClient:
         session: Optional[aiohttp.ClientSession] = None
     ) -> None:
         """Инициализация HTTP-клиента."""
-        self._settings = settings_obj or create_settings.deribit
+        self._settings = settings_obj or settings.deribit
         self._session = session
 
     @property

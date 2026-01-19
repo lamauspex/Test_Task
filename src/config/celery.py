@@ -42,3 +42,6 @@ class CeleryConfig(BaseConfig):
             f"redis://{redis_cfg.HOST}:"
             f"{redis_cfg.PORT}/{redis_cfg.DB + 1}"
         )
+
+
+celery_config = CeleryConfig()

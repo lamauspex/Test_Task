@@ -10,12 +10,14 @@ class DeribitConfig(BaseConfig):
 
     # Публичный API не требует аутентификации
     CLIENT_ID: str = Field(
-        description="ID клиента Deribit (необязательно для public API)"
+        description="ID клиента Deribit"
     )
     CLIENT_SECRET: str = Field(
-        description="Секрет клиента Deribit (необязательно для public API)"
+        description="Секрет клиента Deribit"
     )
     API_URL: str = Field(
         description="Базовый URL Deribit API",
-        alias="DERIBIT_API_URL"
     )
+
+
+derbit_config = DeribitConfig()

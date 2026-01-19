@@ -2,12 +2,12 @@
 Центральный объект конфигурации для crypto price tracker
 """
 
-from .redis import RedisConfig
-from .monitoring import MonitoringConfig
-from .deribit import DeribitConfig
-from .database import DataBaseConfig
-from .celery import CeleryConfig
-from .app import AppConfig
+from .deribit import derbit_config
+from .monitoring import monitoring_config
+from .celery import celery_config
+from .redis import redis_config
+from .database import data_config
+from .app import app_config
 
 
 class Settings:
@@ -15,14 +15,12 @@ class Settings:
 
     def __init__(self):
 
-        self.app = AppConfig()
-        self.database = DataBaseConfig()
-        self.monitoring = MonitoringConfig()
-        self.celery = CeleryConfig()
-        self.deribit = DeribitConfig()
-        self.redis = RedisConfig()
+        self.app = app_config
+        self.database = data_config
+        self.monitoring = monitoring_config
+        self.celery = celery_config
+        self.deribit = derbit_config
+        self.redis = redis_config
 
 
-def create_settings(**kwargs) -> Settings:
-    """ Создаёт новый экземпляр """
-    return Settings(**kwargs)
+settings = Settings()
