@@ -23,7 +23,7 @@ from schemas import (
     DateRangePricesQuery
 )
 
-from services import PriceService
+from services import PriceService, get_price_service
 
 
 router = APIRouter(
@@ -37,11 +37,10 @@ async def get_uow(
     db: DatabaseManager = Depends(get_db),
 ) -> AsyncGenerator[UnitOfWork, None]:
     """
-    Получить UnitOfWork для использования в эндпоинтах.
-
-    FastAPI управляет созданием и закрытием контекста.
-    При ошибке — автоматический rollback.
-    При успехе — автоматический commit.
+    Получаем UnitOfWork для использования в эндпоинтах
+    FastAPI управляет созданием и закрытием контекста
+    При ошибке — автоматический rollback
+    При успехе — автоматический commit
     """
     async with UnitOfWork(db) as uow:
         yield uow
@@ -56,16 +55,16 @@ async def get_uow(
 async def get_all_prices(
     query: AllPricesQuery = Depends(),
     uow: UnitOfWork = Depends(get_uow),
-    service: PriceService = Depends(PriceService),
+    service: PriceService = Depends(get_price_service),
 ) -> List[PriceRecordResponse]:
     """Получить все записи о ценах для указанного тикера."""
 
-    return await service.get_prices_by_ticker(
+    return list(await service.get_prices_by_ticker(
         uow=uow,
         ticker=query.ticker,
         limit=query.limit,
         offset=query.offset
-    )
+    ))
 
 
 @router.get(
@@ -77,7 +76,7 @@ async def get_all_prices(
 async def get_latest_price(
     query: LatestPriceQuery = Depends(),
     uow: UnitOfWork = Depends(get_uow),
-    service: PriceService = Depends(PriceService),
+    service: PriceService = Depends(get_price_service),
 ) -> PriceLatestResponse:
     """Получить последнюю цену для указанного тикера."""
 
@@ -99,7 +98,7 @@ async def get_latest_price(
 async def get_prices_by_date_range(
     query: DateRangePricesQuery = Depends(),
     uow: UnitOfWork = Depends(get_uow),
-    service: PriceService = Depends(PriceService),
+    service: PriceService = Depends(get_price_service),
 ) -> PriceDateRangeResponse:
     """Получить записи о ценах для тикера в диапазоне дат."""
 
@@ -116,5 +115,5 @@ async def get_prices_by_date_range(
         start_date=query.start_date,
         end_date=query.end_date,
         count=len(prices),
-        prices=prices
+        prices=list(prices)
     )

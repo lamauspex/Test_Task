@@ -16,7 +16,7 @@ class DeribitHttpClient:
     """
     HTTP-клиент для Deribit API.
 
-    Отвечает только за управление сессией и выполнение HTTP-запросов.
+    Deribit использует JSON-RPC 2.0 протокол.
     """
 
     def __init__(
@@ -27,16 +27,19 @@ class DeribitHttpClient:
         """Инициализация HTTP-клиента."""
         self._settings = settings_obj or settings.deribit
         self._session = session
+        self._request_id = 0
 
     @property
     def api_url(self) -> str:
         """Получить базовый URL API."""
-        return self._settings.API_URL
+        return self._settings.DERIBIT_API_URL
 
     async def _ensure_session(self) -> aiohttp.ClientSession:
         """Убедиться, что сессия существует."""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
+            self._session = aiohttp.ClientSession(
+                headers={"Content-Type": "application/json"}
+            )
         return self._session
 
     async def close(self) -> None:
@@ -52,11 +55,11 @@ class DeribitHttpClient:
         params: Optional[dict] = None
     ) -> dict:
         """
-        Выполнить HTTP-запрос к Deribit API.
+        Выполнить JSON-RPC запрос к Deribit API.
 
         Args:
-            method: HTTP-метод
-            endpoint: Эндпоинт API
+            method: Не используется (все запросы - POST)
+            endpoint: JSON-RPC метод (например: public/get_index_price)
             params: Параметры запроса
 
         Returns:
@@ -67,10 +70,21 @@ class DeribitHttpClient:
         """
         url = f"{self.api_url}{endpoint}"
 
+        # Генерируем уникальный ID для каждого запроса
+        self._request_id += 1
+
+        # Формируем JSON-RPC тело запроса
+        json_body = {
+            "jsonrpc": "2.0",
+            "method": endpoint,
+            "params": params or {},
+            "id": self._request_id
+        }
+
         try:
             session = await self._ensure_session()
 
-            async with session.get(url, params=params) as response:
+            async with session.post(url, json=json_body) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     logger.error(
@@ -81,7 +95,21 @@ class DeribitHttpClient:
                         f"API returned status {response.status}"
                     )
 
-                return await response.json()
+                json_response = await response.json()
+
+                # Проверяем наличие ошибки в ответе JSON-RPC
+                if "error" in json_response:
+                    error = json_response["error"]
+                    logger.error(
+                        f"Deribit JSON-RPC error: code={error.get('code')}, "
+                        f"message={error.get('message')}"
+                    )
+                    raise DeribitClientError(
+                        f"JSON-RPC error: {error.get('message')} "
+                        f"(code: {error.get('code')})"
+                    )
+
+                return json_response.get("result", {})
 
         except aiohttp.ClientError as e:
             logger.error(f"Network error: {e}")

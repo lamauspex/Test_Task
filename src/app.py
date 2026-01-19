@@ -9,9 +9,9 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from .api import api_router
-from .middleware import ExceptionHandlerMiddleware
-from .config import settings, setup_logging
+from api import api_router
+from middleware import ExceptionHandlerMiddleware
+from config import settings, setup_logging
 
 
 @asynccontextmanager

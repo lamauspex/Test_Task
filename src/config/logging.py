@@ -34,7 +34,7 @@ def setup_logger(
     """
     log_level = getattr(
         logging, (level or settings.monitoring.LOG_LEVEL).upper(),
-        logging.INFO
+        logging.DEBUG
     )
     log_format = settings.monitoring.LOG_FORMAT
 

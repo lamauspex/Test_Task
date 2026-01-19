@@ -1,6 +1,6 @@
 """ Конфигурация Deribit API """
 
-from pydantic import Field, AliasChoices
+from pydantic import Field
 
 from .base import BaseConfig
 

@@ -3,7 +3,7 @@
 Работает с UnitOfWork для транзакционности
 """
 
-from typing import List
+from typing import Sequence
 
 from database import UnitOfWork
 from exceptions import PriceNotFoundError
@@ -51,7 +51,7 @@ class PriceService:
     async def fetch_and_save_all_prices(
         self,
         uow: UnitOfWork,
-    ) -> List[str]:
+    ) -> Sequence[PriceRecordResponse]:
         """
         Получить все цены с Deribit и сохранить в базу данных
 
@@ -78,7 +78,7 @@ class PriceService:
         ticker: str,
         limit: int = 1000,
         offset: int = 0,
-    ) -> List[PriceRecordResponse]:
+    ) -> Sequence[PriceRecordResponse]:
         """
         Получить записи о ценах для тикера через репозиторий
         """
@@ -111,7 +111,7 @@ class PriceService:
         start_date: int,
         end_date: int,
         limit: int = 1000,
-    ) -> List[PriceRecordResponse]:
+    ) -> Sequence[PriceRecordResponse]:
         """
         Получить записи о ценах для тикера в диапазоне дат
         """

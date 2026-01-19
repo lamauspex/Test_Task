@@ -1,6 +1,7 @@
 """Логирование бизнес-логики приложения."""
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from config import get_logger
 
@@ -14,7 +15,7 @@ class BusinessLogicLogger:
     def log_price_saved(
         self,
         ticker: str,
-        price: float,
+        price: Decimal,
         timestamp: int
     ) -> None:
         """Логирование сохранения цены."""

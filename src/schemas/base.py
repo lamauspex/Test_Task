@@ -1,41 +1,33 @@
 """Базовые схемы с валидацией."""
 
-from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
 from utils import VALID_TICKERS
 
 
-TickerField = Field(
-    ...,
-    min_length=1,
-    description="Пара криптовалют (btc_usd или eth_usd)",
-    examples=["btc_usd"]
-)
-
-
 class BaseSchema(BaseModel):
-    """Базовый класс для всех схем."""
+    """Базовый класс для всех схем"""
 
     model_config = {"from_attributes": True}
 
 
 class TickerBase(BaseSchema):
-    """Базовая схема с тикером."""
+    """Базовая схема с тикером"""
 
-    ticker: Annotated[str, TickerField]
+    ticker: str = Field(
+        ...,
+        description=f"Тикер валюты: {', '.join(VALID_TICKERS)}"
+    )
 
     @field_validator("ticker")
-    @classmethod
-    def validate_ticker(cls, v: str) -> str:
-        """Валидация тикера криптовалюты."""
-        ticker_clean = v.lower().strip()
-        if ticker_clean not in VALID_TICKERS:
-            raise ValueError(
-                f"Неверный тикер. Допустимые: {', '.join(VALID_TICKERS)}"
-            )
-        return ticker_clean
+    def validate_ticker(cls, v):
+        """Валидация тикера криптовалюты"""
+
+        v_upper = v.upper()
+        if v_upper not in VALID_TICKERS:
+            raise ValueError(f"Тикер должен быть: {VALID_TICKERS}")
+        return v_upper
 
 
 class DateRangeBase(BaseSchema):
@@ -82,7 +74,7 @@ class PaginationBase(BaseSchema):
 
 class TickerOnlyRequest(BaseSchema):
     """Запрос только с тикером."""
-    ticker: Annotated[str, TickerField]
+    pass
 
 
 class TickerWithPaginationRequest(TickerBase, PaginationBase):

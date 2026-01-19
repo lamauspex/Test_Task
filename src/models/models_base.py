@@ -23,12 +23,12 @@ class BaseModel(
     UUIDPrimaryKeyMixin,
     UnixTimestampMixin
 ):
-    """Базовый модель с предустановленными миксинами."""
+    """Базовый модель с предустановленными миксинами"""
 
     __abstract__ = True
 
-    @declared_attr
-    def __tablename__(cls):
+    @declared_attr  # type: ignore[override]
+    def __tablename__(cls) -> str:
         return cls.__name__.lower() + 's'
 
     def __repr__(self) -> str:

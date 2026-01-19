@@ -61,12 +61,16 @@ class DeribitClient(IDeribitClient):
         if not currency:
             raise DeribitClientError(f"Unknown ticker: {ticker}")
 
+        # Deribit API требует index_name (например: btc_usd)
+        index_name = f"{currency.lower()}_usd"
+
         # Выполнение HTTP-запроса
-        response = await self._http_client.request(
-            method="GET",
-            endpoint="/public/get_index_price",
-            params={"currency": currency}
-        )
+        async with self._http_client:
+            response = await self._http_client.request(
+                method="GET",
+                endpoint="get_index_price",
+                params={"index_name": index_name}
+            )
 
         # Парсинг ответа
         return self._parser.parse_price_response(response, ticker)
@@ -77,16 +81,28 @@ class DeribitClient(IDeribitClient):
         tickers = ["btc_usd", "eth_usd"]
         prices = {}
 
-        for ticker in tickers:
-            try:
-                price_data = await self.fetch_price(ticker)
-                prices[ticker] = price_data
-                logger.info(f"Fetched price for {ticker}: {price_data.price}")
-            except DeribitClientError as e:
-                logger.error(f"Failed to fetch {ticker}: {e}")
-                # Продолжаем с другими тикерами даже при ошибке одного
+        async with self:
+            for ticker in tickers:
+                try:
+                    price_data = await self.fetch_price(ticker)
+                    prices[ticker] = price_data
+                    logger.info(
+                        f"Fetched price for {ticker}: {price_data.price}")
+                except DeribitClientError as e:
+                    logger.error(f"Failed to fetch {ticker}: {e}")
+                    # Продолжаем с другими тикерами даже при ошибке одного
 
         return prices
+
+    async def get_available_index_names(self) -> list:
+        """Получить список доступных индексов (для отладки)."""
+        async with self._http_client:
+            response = await self._http_client.request(
+                method="GET",
+                endpoint="get_index_price_names",
+                params={}
+            )
+        return response.get("result", {}).get("index_names", [])
 
     async def close(self) -> None:
         """Закрыть HTTP-сессию."""
