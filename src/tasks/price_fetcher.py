@@ -6,19 +6,11 @@ import logging
 from celery.exceptions import SoftTimeLimitExceeded
 
 from celery_app import celery_app
-from clients.deribit_client import DeribitClient
 from config import settings
 from database import DatabaseManager, UnitOfWork
 from src.services import PriceService
 
 logger = logging.getLogger(__name__)
-
-
-async def _debug_indexes():
-    """Временная функция для отладки индексов."""
-    async with DeribitClient() as client:
-        indexes = await client.get_available_index_names()
-        logger.info(f"Available index names: {indexes}")
 
 
 async def _fetch_prices_async() -> dict:
@@ -60,9 +52,6 @@ def fetch_crypto_prices(self):
             meta={"status": "Fetching prices..."}
         )
         logger.info("Starting crypto price fetch task")
-
-        # ОТЛАДКА: Получить доступные индексы
-        asyncio.run(_debug_indexes())
 
         # Запускаем асинхронный код
         result = asyncio.run(_fetch_prices_async())

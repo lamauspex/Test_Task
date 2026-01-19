@@ -1,112 +1,142 @@
 """
 Клиент API Deribit.
-
 """
+
+from __future__ import annotations
 import logging
-from typing import Dict
 
-from .deribit_http_client import DeribitHttpClient
-from .deribit_mapper import DeribitMapper, deribit_mapper
-from .deribit_parser import PriceData, DeribitParser, deribit_parser
+import aiohttp
+from dataclasses import dataclass
+
+from src.config.settings import settings
 from src.exceptions.exceptions import DeribitClientError
-
 
 logger = logging.getLogger(__name__)
 
 
-class IDeribitClient:
-    """Интерфейс клиента Deribit."""
-
-    async def fetch_price(self, ticker: str) -> PriceData:
-        """Получить цену для тикера."""
-        ...
-
-    async def fetch_all_prices(self) -> Dict[str, PriceData]:
-        """Получить все цены."""
-        ...
+@dataclass
+class PriceData:
+    """Данные о цене криптовалюты."""
+    ticker: str
+    price: float
+    timestamp: int
 
 
-class DeribitClient(IDeribitClient):
+class DeribitClient:
     """
     Клиент для API криптобиржи Deribit.
 
-    Компонует:
-    - DeribitHttpClient: управление HTTP-сессией и запросами
-    - DeribitMapper: маппинг тикеров
-    - DeribitParser: парсинг ответа API
-
-    Attributes:
-        http_client: HTTP-клиент для запросов
-        mapper: Маппер тикеров
-        parser: Парсер ответа
+    Поддерживает тикеры: btc_usd, eth_usd
     """
 
-    def __init__(
-        self,
-        http_client: DeribitHttpClient | None = None,
-        mapper: DeribitMapper | None = None,
-        parser: DeribitParser | None = None,
-    ) -> None:
-        """ Инициализация клиента Deribit """
+    # Маппинг тикера к валюте Deribit
+    VALID_TICKERS = {"btc_usd", "eth_usd"}
 
-        self._http_client = http_client or DeribitHttpClient()
-        self._mapper = mapper or deribit_mapper
-        self._parser = parser or deribit_parser
+    def __init__(self) -> None:
+        """Инициализация клиента Deribit."""
+        self._session: aiohttp.ClientSession | None = None
+        self._request_id = 0
+
+    async def _ensure_session(self) -> aiohttp.ClientSession:
+        """Создать или переиспользовать сессию."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(
+                headers={"Content-Type": "application/json"}
+            )
+        return self._session
+
+    async def request(
+        self,
+        method: str,
+        endpoint: str,
+        params: dict | None = None
+    ) -> dict:
+        """
+        Выполнить JSON-RPC запрос к Deribit API.
+        """
+        url = f"{settings.deribit.DERIBIT_API_URL}{endpoint}"
+        self._request_id += 1
+
+        json_body = {
+            "jsonrpc": "2.0",
+            "method": endpoint,
+            "params": params or {},
+            "id": self._request_id
+        }
+
+        session = await self._ensure_session()
+
+        async with session.post(url, json=json_body) as response:
+            if response.status != 200:
+                raise DeribitClientError(
+                    f"API error: status={response.status}")
+
+            json_response = await response.json()
+
+            if "error" in json_response:
+                error = json_response["error"]
+                raise DeribitClientError(
+                    f"JSON-RPC error: {error.get('message')}"
+                )
+
+            return json_response.get("result", {})
 
     async def fetch_price(self, ticker: str) -> PriceData:
-        """ Получить цену для тикера """
+        """
+        Получить цену для тикера.
 
-        # Валидация тикера через маппер
-        currency = self._mapper.get_currency(ticker)
-        if not currency:
+        Args:
+            ticker: Тикер валюты (btc_usd, eth_usd)
+
+        Returns:
+            PriceData с ценой и временем
+
+        Raises:
+            DeribitClientError: При ошибке API или неизвестном тикере
+        """
+        ticker = ticker.lower()
+
+        if ticker not in self.VALID_TICKERS:
             raise DeribitClientError(f"Unknown ticker: {ticker}")
 
-        # Deribit API требует index_name (например: btc_usd)
-        index_name = f"{currency.lower()}_usd"
+        result = await self.request(
+            method="GET",
+            endpoint="/public/get_index_price",
+            params={"index_name": ticker}
+        )
 
-        # Выполнение HTTP-запроса
-        async with self._http_client:
-            response = await self._http_client.request(
-                method="GET",
-                endpoint="get_index_price",
-                params={"index_name": index_name}
-            )
+        index_price = result.get("index_price")
+        if index_price is None:
+            raise DeribitClientError("Missing index_price in response")
 
-        # Парсинг ответа
-        return self._parser.parse_price_response(response, ticker)
+        timestamp = result.get("timestamp", 0) // 1000
 
-    async def fetch_all_prices(self) -> Dict[str, PriceData]:
-        """ Получить цены для всех отслеживаемых валют """
+        return PriceData(
+            ticker=ticker,
+            price=float(index_price),
+            timestamp=int(timestamp)
+        )
 
-        tickers = ["btc_usd", "eth_usd"]
+    async def fetch_all_prices(self) -> dict[str, PriceData]:
+        """Получить цены для всех поддерживаемых валют."""
         prices = {}
 
         async with self:
-            for ticker in tickers:
+            for ticker in self.VALID_TICKERS:
                 try:
                     price_data = await self.fetch_price(ticker)
                     prices[ticker] = price_data
-                    logger.info(
-                        f"Fetched price for {ticker}: {price_data.price}")
+                    logger.info(f"Fetched {ticker}: {price_data.price}")
                 except DeribitClientError as e:
                     logger.error(f"Failed to fetch {ticker}: {e}")
-                    # Продолжаем с другими тикерами даже при ошибке одного
 
         return prices
 
-    async def get_available_index_names(self) -> list:
-        """Получить список доступных индексов (для отладки)."""
-        async with self._http_client:
-            response = await self._http_client.request(
-                method="GET",
-                endpoint="get_index_price_names",
-                params={}
-            )
-        return response.get("result", {}).get("index_names", [])
-
     async def close(self) -> None:
         """Закрыть HTTP-сессию."""
-        await self._http_client.close()
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def __aenter__(self) -> "DeribitClient":
         """Контекстный менеджер - вход."""
@@ -117,7 +147,5 @@ class DeribitClient(IDeribitClient):
         await self.close()
 
 
-# Экземпляры по умолчанию для внедрения зависимостей
-default_http_client = DeribitHttpClient()
-default_mapper = deribit_mapper
-default_parser = deribit_parser
+# Экземпляр по умолчанию
+default_client = DeribitClient()
