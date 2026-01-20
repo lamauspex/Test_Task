@@ -1,6 +1,6 @@
 # Архитектура проекта Crypto Price Tracker
 
-## Общая схема
+## 🟢 Общая схема
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -26,7 +26,7 @@
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Компоненты
+## 🟢 Компоненты
 
 ### 1. FastAPI Application
 - **Порт:** 8000
@@ -62,7 +62,15 @@
 - **Метод:** `GET /get_index_price?coin={coin}`
 - **Тикеры:** `btc_usd`, `eth_usd`
 
-## Структура проекта
+## 🟢 API эндпоинты
+
+| Метод | URL | Описание |
+|-------|-----|----------|
+| GET | `/api/v1/prices/all?ticker=btc_usd` | Все цены тикера |
+| GET | `/api/v1/prices/latest?ticker=btc_usd` | Последняя цена |
+| GET | `/api/v1/prices/date-range?ticker=btc_usd&start_date=1704067200&end_date=1704153600` | Цены по диапазону |
+
+## 🟢 Структура проекта
 
 ```
 crypto-price-tracker/
@@ -144,7 +152,7 @@ crypto-price-tracker/
 └── README.md
 ```
 
-## Потоки данных
+## 🟢 Потоки данных
 
 ### Поток 1: Сбор цен (Celery)
 ```
@@ -156,7 +164,7 @@ Celery Beat → fetch_crypto_prices → Deribit API → PostgreSQL
 Client → FastAPI → PriceService → PriceRepository → PostgreSQL
 ```
 
-## Технологический стек
+## 🟢 Технологический стек
 
 | Компонент | Технология |
 |-----------|------------|
@@ -171,7 +179,7 @@ Client → FastAPI → PriceService → PriceRepository → PostgreSQL
 | Migrations | Alembic 1.18.1 |
 | Testing | pytest 9.0.2 |
 
-## Конфигурация
+## 🟢 Конфигурация
 
 Все настройки загружаются из переменных окружения через `pydantic-settings`.
 
