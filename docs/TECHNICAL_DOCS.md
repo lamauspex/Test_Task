@@ -9,9 +9,7 @@
 4. REST API на FastAPI — 3 GET метода с фильтрацией
 5. Docker Compose — 5 сервисов (app, worker, beat, postgres, redis)
 
-### Необязательные ✅
-1. Полностью асинхронный HTTP-клиент (aiohttp)
-2. Unit-тесты с pytest
+
 
 ---
 
@@ -64,57 +62,7 @@
 
 ## 🟢 Структура проекта
 
-```
-crypto-price-tracker/
-├── src/
-│   ├── main.py                    # Точка входа FastAPI
-│   ├── celery_app.py              # Инициализация Celery
-│   ├── api/
-│   │   └── routes.py              # API эндпоинты
-│   ├── clients/
-│   │   └── deribit_client.py      # Клиент Deribit (aiohttp)
-│   ├── config/
-│   │   ├── base.py                # Базовые классы
-│   │   ├── settings.py            # Централизованные настройки
-│   │   ├── app.py                 # Настройки FastAPI
-│   │   ├── database.py            # PostgreSQL
-│   │   ├── celery.py              # Celery + Redis
-│   │   ├── deribit.py             # Deribit API
-│   │   ├── redis.py               # Redis
-│   │   ├── logging.py             # Логирование
-│   │   └── monitoring.py          # Мониторинг
-│   ├── database/
-│   │   ├── database.py            # Менеджер подключений
-│   │   ├── dependencies.py        # FastAPI dependencies
-│   │   └── uow.py                 # Unit of Work
-│   ├── models/
-│   │   └── models.py              # SQLAlchemy модели
-│   ├── repositories/
-│   │   └── price_repository.py    # CRUD операции
-│   ├── schemas/
-│   │   ├── base.py                # Базовые схемы
-│   │   ├── requests.py            # Валидация запросов
-│   │   └── responses.py           # Формат ответов
-│   ├── services/
-│   │   └── price_service.py       # Business Logic
-│   ├── tasks/
-│   │   └── price_fetcher.py       # Celery задача
-│   ├── middleware/
-│   │   ├── exception_handler.py   # Обработка ошибок
-│   │   └── business.py            # Бизнес-логирование
-│   └── exceptions/
-│       └── exceptions.py          # Кастомные исключения
-├── clients/
-│   └── deribit_client.py          # Клиент Deribit (вне DI)
-├── tests/
-│   └── test_repository_architecture.py
-├── docker/
-│   ├── Dockerfile
-│   └── entrypoint.sh
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-```
+
 
 ---
 
@@ -197,7 +145,11 @@ class PriceRecord(BaseModel):
 **Response:**
 ```json
 [
-  {"ticker": "btc_usd", "price": 50000.00, "timestamp": 1705000000, "created_at": "..."}
+  {"ticker": "btc_usd", 
+  "price": 50000.00, 
+  "timestamp": 1705000000, 
+  "created_at": "..."
+  }
 ]
 ```
 
@@ -272,14 +224,6 @@ class PriceRecord(BaseModel):
 
 ---
 
-## 🟢 Тестирование
-
-
-
-### Тесты
-
-
----
 
 ## 🟢 Design Decisions
 

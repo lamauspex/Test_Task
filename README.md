@@ -5,12 +5,17 @@
 ## 🟢 Быстрый старт
 ### Клонируйте репозиторий
 ```bash
-git clone https://github.com/lamauspex/Test_Task/blob/master/Dockerfile
+git clone https://github.com/lamauspex/Test_Task
 ```
 ### Сборка и запуск всех сервисов в фоновом режиме
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
+### Swagger документация
+```bash
+open http://localhost:8000/docs
+```
+
 
 ## 🟢 Сервисы
 

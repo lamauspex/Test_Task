@@ -40,7 +40,7 @@ async def get_uow(
 @router.get(
     "/all",
     response_model=List[PriceRecordResponse],
-    summary="Получить все цены по тикеру",
+    summary="Получить все цены по тикеру BTC_USD или ETH_USD",
     description="Возвращает все сохранённые записи о ценах"
 )
 async def get_all_prices(
@@ -61,7 +61,7 @@ async def get_all_prices(
 @router.get(
     "/latest",
     response_model=PriceLatestResponse,
-    summary="Получить последнюю цену по тикеру",
+    summary="Получить последнюю цену BTC_USD или ETH_USD",
     description="Возвращает последнюю запись о цене"
 )
 async def get_latest_price(
@@ -83,7 +83,7 @@ async def get_latest_price(
 @router.get(
     "/date-range",
     response_model=PriceDateRangeResponse,
-    summary="Получить цены по диапазону дат",
+    summary="Получить цены BTC_USD или ETH_USD по диапазону дат",
     description="Возвращает записи о цене в указанном диапазоне"
 )
 async def get_prices_by_date_range(

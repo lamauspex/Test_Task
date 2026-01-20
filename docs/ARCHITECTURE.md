@@ -65,65 +65,80 @@
 ## Структура проекта
 
 ```
-crypto_price_tracker/
+crypto-price-tracker/
+│
 ├── src/
-│   ├── __init__.py
+│   │
+│   ├── app.py                     # FastAPI приложение
 │   ├── main.py                    # Точка входа FastAPI
-│   ├── app.py                     # Инициализация FastAPI
+│   ├── celery_app.py              # Инициализация Celery
+│   │
 │   ├── api/
-│   │   ├── __init__.py            # API router
-│   │   └── routes.py              # Эндпоинты (150 строк)
+│   │   └── routes.py              # API эндпоинты
+│   │ 
 │   ├── clients/
-│   │   └── deribit_client.py      # Клиент Deribit (200 строк)
+│   │   └── deribit_client.py      # Клиент Deribit (aiohttp)
+    │
 │   ├── config/
-│   │   ├── __init__.py            # Фабрика настроек
-│   │   ├── base.py                # Базовый класс
-│   │   ├── settings.py            # Объединение конфигов
+│   │   ├── base.py                # Базовые классы
+│   │   ├── settings.py            # Централизованные настройки
 │   │   ├── app.py                 # Настройки FastAPI
-│   │   ├── database.py            # Настройки БД
-│   │   ├── celery.py              # Настройки Celery
-│   │   ├── deribit.py             # Настройки Deribit
-│   │   ├── redis.py               # Настройки Redis
-│   │   ├── logging.py             # Настройки логирования
-│   │   └── monitoring.py          # Настройки мониторинга
+│   │   ├── database.py            # PostgreSQL
+│   │   ├── celery.py              # Celery + Redis
+│   │   ├── deribit.py             # Deribit API
+│   │   ├── redis.py               # Redis
+│   │   ├── logging.py             # Логирование
+│   │   └── monitoring.py          # Мониторинг
+│   │
 │   ├── database/
-│   │   ├── __init__.py
 │   │   ├── database.py            # Менеджер подключений
 │   │   ├── dependencies.py        # FastAPI dependencies
-│   │   └── uow.py                 # Unit of Work паттерн
+│   │   └── uow.py                 # Unit of Work
+│   │
 │   ├── models/
-│   │   └── models.py              # SQLAlchemy модели (50 строк)
+│   │   └── models.py              # SQLAlchemy модели
+│   │
 │   ├── repositories/
-│   │   └── price_repository.py    # CRUD операции (120 строк)
+│   │   └── price_repository.py    # CRUD операции
+│   │
 │   ├── schemas/
-│   │   ├── __init__.py
 │   │   ├── base.py                # Базовые схемы
 │   │   ├── requests.py            # Валидация запросов
 │   │   └── responses.py           # Формат ответов
+│   │
 │   ├── services/
-│   │   └── price_service.py       # Business Logic (100 строк)
+│   │   └── price_service.py       # Business Logic
+│   │
 │   ├── tasks/
-│   │   └── price_fetcher.py       # Celery задача (80 строк)
+│   │   └── price_fetcher.py       # Celery задача
+│   │
 │   ├── middleware/
-│   │   ├── __init__.py
 │   │   ├── exception_handler.py   # Обработка ошибок
 │   │   └── business.py            # Бизнес-логирование
+│   │
 │   └── exceptions/
 │       └── exceptions.py          # Кастомные исключения
+│
+├── clients/                      # Миграции
+│
 ├── clients/
-│   └── deribit_client.py          # Клиент Deribit (отдельный модуль)
-├── src/celery_app.py              # Инициализация Celery
-├── alembic/
-│   ├── versions/                  # Миграции БД
-│   └── env.py
-├── tests/                         # Тесты
+│   └── deribit_client.py          # Клиент Deribit
+│
 ├── docker/
 │   ├── Dockerfile
+│   ├── entrypoint_celery.sh
 │   └── entrypoint.sh
+│
 ├── docs/
-│   ├── .env.example
-│   ├── ARCHITECTURE.md            # Этот файл
-│   └── TECHNICAL_DOCS.md
+│   ├── ARCHITECTURE.md       # Архитектура проекта 
+│   ├── TECHNICAL_DOCS.md     # Техническая документация
+│   ├── Makefile              # команды управления
+│   └── INSTALLATION.md       # Руководство по установке
+│
+├── .dockerignore
+├── .gitignore
+├── alembic.ini
+├── pyproject.toml
 ├── docker-compose.yml
 ├── requirements.txt
 └── README.md

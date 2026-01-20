@@ -1,5 +1,6 @@
 # Руководство по установке
 
+
 ## Требования
 
 - Docker
@@ -10,15 +11,17 @@
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://gitlab.com/username/crypto_price_tracker.git
+git clone https://github.com/lamauspex/Test_Task
+```
+```bash
 cd crypto_price_tracker
 ```
 
 ### 2. Запуск Docker Compose
 
 ```bash
-# Сборка и запуск всех сервисов в фоновом режиме
-docker-compose up -d --build
+# Сборка и запуск всех сервисов
+docker-compose up -d
 
 # Просмотр логов
 docker-compose logs -f
@@ -33,8 +36,6 @@ docker-compose down
 # Статус контейнеров
 docker-compose ps
 
-# Тест API
-curl http://localhost:8000/api/v1/prices/all?ticker=btc_usd
 
 # Swagger документация
 open http://localhost:8000/docs
@@ -73,54 +74,3 @@ docker-compose logs beat
 ```
 
 См. также: [ARCHITECTURE.md](ARCHITECTURE.md), [TECHNICAL_DOCS.md](TECHNICAL_DOCS.md)
-
-## 🟢 Режим разработки
-
-Для разработки без Docker:
-
-### 1. Создайте виртуальное окружение
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# или
-.\venv\Scripts\activate   # Windows
-```
-
-### 2. Установите зависимости
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Настройте PostgreSQL и Redis локально
-
-```bash
-# PostgreSQL
-sudo systemctl start postgresql
-sudo -u postgres createdb crypto_prices
-
-# Redis
-sudo systemctl start redis
-```
-
-### 4. Запустите миграции
-
-```bash
-alembic upgrade head
-```
-
-### 5. Запустите компоненты
-
-В разных терминалах:
-
-```bash
-# FastAPI (с hot reload)
-uvicorn app:app --reload
-
-# Celery Worker
-celery -A celery_app worker -l info
-
-# Celery Beat
-celery -A celery_app beat -l info
-```
