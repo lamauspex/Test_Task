@@ -5,12 +5,22 @@ import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery_app import celery_app
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker
+)
 
 from config import settings
-from database import database_manager, UnitOfWork
+from database import UnitOfWork
 from services import PriceService
 
 logger = logging.getLogger(__name__)
+
+
+def get_engine():
+    """Создать новый движок БД для текущего event loop."""
+    return create_async_engine(settings.data_config.get_database_url())
 
 
 async def _fetch_prices_async() -> dict:
@@ -21,18 +31,29 @@ async def _fetch_prices_async() -> dict:
     """
     service = PriceService()
 
-    # Создаём сессию через контекстный менеджер
-    async with database_manager.session_factory() as session:
-        # UnitOfWork оборачивает сессию, но не управляет её созданием/закрытием
-        async with UnitOfWork(session) as uow:
-            saved_tickers = await service.fetch_and_save_all_prices(uow)
+    # Создаём новый engine и session_factory для текущего loop
+    engine = get_engine()
+    async_session = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
 
-    logger.info(f"Successfully fetched and saved prices for: {saved_tickers}")
-    return {
-        "status": "success",
-        "count": len(saved_tickers),
-        "tickers": saved_tickers
-    }
+    try:
+        async with async_session() as session:
+            async with UnitOfWork(session) as uow:
+                saved_tickers = await service.fetch_and_save_all_prices(uow)
+
+        logger.info(
+            f"Successfully fetched and saved prices for: {saved_tickers}")
+        return {
+            "status": "success",
+            "count": len(saved_tickers),
+            "tickers": saved_tickers
+        }
+    finally:
+        # Закрываем engine после использования
+        await engine.dispose()
 
 
 @celery_app.task(
