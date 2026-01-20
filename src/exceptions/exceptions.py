@@ -2,6 +2,14 @@
 Кастомные исключения
 """
 
+from pydantic import BaseModel, Field
+
+
+class ErrorResponse(BaseModel):
+    """Ответ об ошибке."""
+
+    detail: str = Field(..., description="Описание ошибки")
+
 
 class PriceNotFoundError(Exception):
     """Ошибка отсутствия данных о цене"""

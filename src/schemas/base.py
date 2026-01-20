@@ -70,23 +70,3 @@ class PaginationBase(BaseSchema):
         ge=0,
         description="Количество записей для пропуска"
     )
-
-
-class TickerOnlyRequest(BaseSchema):
-    """Запрос только с тикером."""
-    pass
-
-
-class TickerWithPaginationRequest(TickerBase, PaginationBase):
-    """Запрос с тикером и пагинацией."""
-    pass
-
-
-class DateRangeRequest(TickerBase, DateRangeBase):
-    """Запрос с тикером и диапазоном дат."""
-    limit: int = Field(
-        default=1000,
-        ge=1,
-        le=10000,
-        description="Максимальное количество записей"
-    )

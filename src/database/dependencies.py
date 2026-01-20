@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .database import get_db_session
+from .database import database_manager
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -14,5 +14,5 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     Yields:
         AsyncSession: Активная сессия базы данных
     """
-    async with get_db_session() as session:
+    async with database_manager.session_factory() as session:
         yield session

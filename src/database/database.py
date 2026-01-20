@@ -35,7 +35,6 @@ class DatabaseManager:
 database_manager = DatabaseManager(settings.data_config.get_database_url())
 
 
-@asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Глобальная функция для получения сессии БД."""
     async with database_manager.session_factory() as session:

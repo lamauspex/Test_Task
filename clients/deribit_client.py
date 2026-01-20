@@ -4,12 +4,14 @@
 
 from __future__ import annotations
 import logging
+from decimal import Decimal
 
 import aiohttp
 from dataclasses import dataclass
 
 from src.config.settings import settings
 from src.exceptions.exceptions import DeribitClientError
+from src.utils.types import VALID_TICKERS
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 class PriceData:
     """Данные о цене криптовалюты."""
     ticker: str
-    price: float
+    price: Decimal
     timestamp: int
 
 
@@ -29,21 +31,36 @@ class DeribitClient:
     Поддерживает тикеры: btc_usd, eth_usd
     """
 
-    # Маппинг тикера к валюте Deribit
-    VALID_TICKERS = {"btc_usd", "eth_usd"}
-
     def __init__(self) -> None:
         """Инициализация клиента Deribit."""
         self._session: aiohttp.ClientSession | None = None
         self._request_id = 0
+        self._access_token: str | None = None
 
     async def _ensure_session(self) -> aiohttp.ClientSession:
         """Создать или переиспользовать сессию."""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(
-                headers={"Content-Type": "application/json"}
-            )
+            headers = {"Content-Type": "application/json"}
+            if self._access_token:
+                headers["Authorization"] = f"Bearer {self._access_token}"
+            self._session = aiohttp.ClientSession(headers=headers)
         return self._session
+
+    async def authenticate(self) -> None:
+        """
+        Аутентификация и получение токена доступа.
+        """
+        result = await self.request(
+            method="POST",
+            endpoint="/public/auth",
+            params={
+                "grant_type": "client_credentials",
+                "client_id": settings.deribit.CLIENT_ID,
+                "client_secret": settings.deribit.CLIENT_SECRET
+            }
+        )
+        self._access_token = result.get("access_token")
+        logger.info("Successfully authenticated with Deribit API")
 
     async def request(
         self,
@@ -68,15 +85,17 @@ class DeribitClient:
 
         async with session.post(url, json=json_body) as response:
             if response.status != 200:
+                error_text = await response.text()
                 raise DeribitClientError(
-                    f"API error: status={response.status}")
+                    f"API error: status={response.status}, body={error_text}"
+                )
 
             json_response = await response.json()
 
             if "error" in json_response:
                 error = json_response["error"]
                 raise DeribitClientError(
-                    f"JSON-RPC error: {error.get('message')}"
+                    f"JSON-RPC error: {error.get('message')} (code: {error.get('code')})"
                 )
 
             return json_response.get("result", {})
@@ -84,36 +103,33 @@ class DeribitClient:
     async def fetch_price(self, ticker: str) -> PriceData:
         """
         Получить цену для тикера.
-
-        Args:
-            ticker: Тикер валюты (btc_usd, eth_usd)
-
-        Returns:
-            PriceData с ценой и временем
-
-        Raises:
-            DeribitClientError: При ошибке API или неизвестном тикере
         """
         ticker = ticker.lower()
 
-        if ticker not in self.VALID_TICKERS:
-            raise DeribitClientError(f"Unknown ticker: {ticker}")
+        # Преобразуем btc_usd -> BTC, eth_usd -> ETH
+        currency_map = {"btc_usd": "BTC", "eth_usd": "ETH"}
+        currency = currency_map.get(ticker, ticker.upper())
 
         result = await self.request(
-            method="GET",
-            endpoint="/public/get_index_price",
-            params={"index_name": ticker}
+            method="POST",
+            endpoint="/public/get_index",
+            params={"currency": currency}
         )
 
-        index_price = result.get("index_price")
+        # Deribit возвращает объект с полем 'index_price'
+        index_price = result.get("index_price") if isinstance(
+            result, dict) else result
         if index_price is None:
-            raise DeribitClientError("Missing index_price in response")
+            raise DeribitClientError(
+                f"Missing index_price in response: {result}")
 
-        timestamp = result.get("timestamp", 0) // 1000
+        timestamp = result.get("timestamp", 0)
+        if timestamp > 0:
+            timestamp = timestamp // 1000
 
         return PriceData(
             ticker=ticker,
-            price=float(index_price),
+            price=Decimal(str(index_price)),
             timestamp=int(timestamp)
         )
 
@@ -122,7 +138,10 @@ class DeribitClient:
         prices = {}
 
         async with self:
-            for ticker in self.VALID_TICKERS:
+            # Сначала аутентифицируемся
+            await self.authenticate()
+
+            for ticker in VALID_TICKERS:
                 try:
                     price_data = await self.fetch_price(ticker)
                     prices[ticker] = price_data

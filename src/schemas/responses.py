@@ -3,22 +3,24 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import List
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from .base import TickerBase
 
 
 class PriceRecordResponse(TickerBase):
-    """Запись о цене."""
+    """ Запись о цене """
 
+    id: UUID = Field(..., description="Уникальный идентификатор записи")
     price: Decimal = Field(..., description="Цена валюты")
     timestamp: int = Field(..., ge=0, description="Время в UNIX timestamp")
     created_at: datetime = Field(..., description="Время создания записи в БД")
 
 
 class PriceLatestResponse(TickerBase):
-    """Последняя цена."""
+    """Последняя цена"""
 
     price: Decimal = Field(..., description="Последняя цена валюты")
     timestamp: int = Field(..., ge=0, description="Время в UNIX timestamp")
@@ -26,7 +28,7 @@ class PriceLatestResponse(TickerBase):
 
 
 class PriceDateRangeResponse(TickerBase):
-    """Цены по диапазону дат."""
+    """Цены по диапазону дат"""
 
     start_date: int = Field(..., ge=0, description="Начало диапазона")
     end_date: int = Field(..., ge=0, description="Конец диапазона")
@@ -35,9 +37,3 @@ class PriceDateRangeResponse(TickerBase):
         default_factory=list,
         description="Список записей о ценах"
     )
-
-
-class ErrorResponse(BaseModel):
-    """Ответ об ошибке."""
-
-    detail: str = Field(..., description="Описание ошибки")

@@ -62,7 +62,7 @@ services:
       - FETCH_MAX_RETRIES=3
       - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2
-      - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
+      - CLIENT_SECRET=8Cc6tyPl6aYoqayXGTJQx7kilr5-DMERjh8XQwbEJi4
       - CLIENT_ID=1vjTur19
       - LOG_LEVEL=INFO
       - LOG_FORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
@@ -112,7 +112,7 @@ services:
       - FETCH_MAX_RETRIES=3
       - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2
-      - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
+      - CLIENT_SECRET=8Cc6tyPl6aYoqayXGTJQx7kilr5-DMERjh8XQwbEJi4
       - CLIENT_ID=1vjTur19
       - LOG_LEVEL=INFO
       - LOG_FORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
@@ -175,7 +175,7 @@ services:
       - FETCH_INTERVAL=60
       - SCRIPT_LOCATION=src.celery_app
       - DERIBIT_API_URL=https://www.deribit.com/api/v2
-      - CLIENT_SECRET=h99vw1dmRsxOSnKvA2jsQtDvfjBAHkOzAvjIPkb3B6Q
+      - CLIENT_SECRET=8Cc6tyPl6aYoqayXGTJQx7kilr5-DMERjh8XQwbEJi4
       - CLIENT_ID=1vjTur19
     depends_on:
       postgres:

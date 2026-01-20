@@ -10,8 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from config import settings
-from schemas import ErrorResponse
-from exceptions import PriceNotFoundError
+from exceptions import PriceNotFoundError, ErrorResponse
 
 
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):

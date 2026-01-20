@@ -3,37 +3,27 @@
 from pydantic import Field
 
 from .base import (
-    TickerBase,
-    TickerWithPaginationRequest,
-    DateRangeRequest
+    DateRangeBase,
+    PaginationBase,
+    TickerBase
 )
 
 
-class DateRangeQueryParams(TickerBase):
-    """Параметры запроса с фильтром по диапазону дат."""
-
-    start_date: int = Field(
-        ...,
-        ge=0,
-        description="Начальная дата как UNIX timestamp"
-    )
-    end_date: int = Field(
-        ...,
-        ge=0,
-        description="Конечная дата как UNIX timestamp"
+class DateRangePricesQuery(TickerBase, DateRangeBase):
+    """ Запрос цен по диапазону дат """
+    limit: int = Field(
+        default=1000,
+        ge=1,
+        le=10000,
+        description="Максимальное количество записей"
     )
 
 
-class AllPricesQuery(TickerWithPaginationRequest):
-    """Запрос всех цен по тикеру."""
+class AllPricesQuery(TickerBase, PaginationBase):
+    """ Запрос всех цен по тикеру """
     pass
 
 
 class LatestPriceQuery(TickerBase):
-    """Запрос последней цены."""
-    pass
-
-
-class DateRangePricesQuery(DateRangeRequest):
-    """Запрос цен по диапазону дат."""
+    """ Запрос последней цены """
     pass

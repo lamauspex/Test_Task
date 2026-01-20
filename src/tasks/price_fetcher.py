@@ -4,8 +4,8 @@ import asyncio
 import logging
 
 from celery.exceptions import SoftTimeLimitExceeded
-
 from celery_app import celery_app
+
 from config import settings
 from database import DatabaseManager, UnitOfWork
 from src.services import PriceService

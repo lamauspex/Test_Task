@@ -1,5 +1,6 @@
 pytest>=9.0.2
 pytest-asyncio>=0.24.0
+aiosqlite>=0.20.0
 iniconfig>=2.1.0
 pluggy>=1.6.0
 colorama>=0.4.6

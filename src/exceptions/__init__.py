@@ -1,3 +1,11 @@
-from .exceptions import PriceNotFoundError, DeribitClientError
+from .exceptions import (
+    PriceNotFoundError,
+    DeribitClientError,
+    ErrorResponse
+)
 
-__all__ = ['PriceNotFoundError', 'DeribitClientError']
+__all__ = [
+    'PriceNotFoundError',
+    'DeribitClientError',
+    'ErrorResponse'
+]
