@@ -1,19 +1,14 @@
 """API маршруты для работы с данными о ценах."""
 
-from contextlib import asynccontextmanager
-from typing import List, AsyncGenerator
+from typing import List
 
 from fastapi import (
     APIRouter,
     Depends,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from database import (
-    DatabaseManager,
-    UnitOfWork,
-    get_db
-)
+from database import get_db, UnitOfWork
 from schemas import (
     PriceRecordResponse,
     PriceLatestResponse,
@@ -32,18 +27,14 @@ router = APIRouter(
 )
 
 
-@asynccontextmanager
 async def get_uow(
-    db: DatabaseManager = Depends(get_db),
-) -> AsyncGenerator[UnitOfWork, None]:
+    session: AsyncSession = Depends(get_db),
+) -> UnitOfWork:
     """
-    Получаем UnitOfWork для использования в эндпоинтах
-    FastAPI управляет созданием и закрытием контекста
-    При ошибке — автоматический rollback
-    При успехе — автоматический commit
+    Получаем UnitOfWork для использования в эндпоинтах.
+    Сессия передаётся из get_db, UnitOfWork только оборачивает её.
     """
-    async with UnitOfWork(db) as uow:
-        yield uow
+    return UnitOfWork(session)
 
 
 @router.get(

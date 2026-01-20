@@ -1,4 +1,6 @@
 """Логирование бизнес-логики приложения."""
+
+
 import logging
 from datetime import datetime
 from decimal import Decimal

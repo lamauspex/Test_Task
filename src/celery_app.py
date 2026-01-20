@@ -1,11 +1,5 @@
 """
-Инициализация Celery приложения.
-
-Использование:
-    from src.celery_app import celery_app
-
-    celery -A celery_app worker -l info
-    celery -A celery_app beat -l info
+Инициализация Celery приложения
 """
 
 from celery import Celery

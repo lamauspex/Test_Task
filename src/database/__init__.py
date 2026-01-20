@@ -1,14 +1,15 @@
 from .database import (
     DatabaseManager,
-    get_db_session
+    get_db_session,
+    database_manager
 )
 from .dependencies import get_db
-from .uow import get_uow, UnitOfWork
+from .uow import UnitOfWork
 
 __all__ = [
     "DatabaseManager",
     "get_db_session",
     "get_db",
-    "get_uow",
-    "UnitOfWork"
+    "UnitOfWork",
+    "database_manager"
 ]

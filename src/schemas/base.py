@@ -3,8 +3,6 @@
 
 from pydantic import BaseModel, Field, field_validator
 
-from utils import VALID_TICKERS
-
 
 class BaseSchema(BaseModel):
     """Базовый класс для всех схем"""
@@ -17,17 +15,8 @@ class TickerBase(BaseSchema):
 
     ticker: str = Field(
         ...,
-        description=f"Тикер валюты: {', '.join(VALID_TICKERS)}"
+        description="Тикер валюты"
     )
-
-    @field_validator("ticker")
-    def validate_ticker(cls, v):
-        """Валидация тикера криптовалюты"""
-
-        v_upper = v.upper()
-        if v_upper not in VALID_TICKERS:
-            raise ValueError(f"Тикер должен быть: {VALID_TICKERS}")
-        return v_upper
 
 
 class DateRangeBase(BaseSchema):

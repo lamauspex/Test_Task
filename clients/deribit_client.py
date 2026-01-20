@@ -1,13 +1,14 @@
 """
-Клиент API Deribit.
+Минимальный клиент API Deribit для получения цен криптовалют.
 """
 
 from __future__ import annotations
 import logging
-from decimal import Decimal
+from dataclasses import dataclass
+from typing import Dict
+from urllib.parse import urlencode
 
 import aiohttp
-from dataclasses import dataclass
 
 from src.config.settings import settings
 from src.exceptions.exceptions import DeribitClientError
@@ -20,70 +21,70 @@ logger = logging.getLogger(__name__)
 class PriceData:
     """Данные о цене криптовалюты."""
     ticker: str
-    price: Decimal
+    price: float
     timestamp: int
 
 
 class DeribitClient:
     """
-    Клиент для API криптобиржи Deribit.
+    Минимальный клиент для API Deribit.
 
-    Поддерживает тикеры: btc_usd, eth_usd
+    Поддерживает: btc_usd, eth_usd
+
+    Использовать как async контекстный менеджер:
+        async with DeribitClient() as client:
+            prices = await client.fetch_all_prices()
     """
 
     def __init__(self) -> None:
-        """Инициализация клиента Deribit."""
+        """Инициализация клиента."""
         self._session: aiohttp.ClientSession | None = None
-        self._request_id = 0
-        self._access_token: str | None = None
 
-    async def _ensure_session(self) -> aiohttp.ClientSession:
-        """Создать или переиспользовать сессию."""
+    async def __aenter__(self) -> "DeribitClient":
+        """
+        Контекстный менеджер - вход.
+        Создаёт сессию для текущего event loop.
+        """
+        self._session = aiohttp.ClientSession()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Контекстный менеджер - выход. Закрывает сессию."""
+        await self.close()
+
+    async def close(self) -> None:
+        """Закрыть сессию."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """
+        Получить существующую сессию или создать новую.
+        """
         if self._session is None or self._session.closed:
-            headers = {"Content-Type": "application/json"}
-            if self._access_token:
-                headers["Authorization"] = f"Bearer {self._access_token}"
-            self._session = aiohttp.ClientSession(headers=headers)
+            self._session = aiohttp.ClientSession()
         return self._session
 
-    async def authenticate(self) -> None:
-        """
-        Аутентификация и получение токена доступа.
-        """
-        result = await self.request(
-            method="POST",
-            endpoint="/public/auth",
-            params={
-                "grant_type": "client_credentials",
-                "client_id": settings.deribit.CLIENT_ID,
-                "client_secret": settings.deribit.CLIENT_SECRET
-            }
-        )
-        self._access_token = result.get("access_token")
-        logger.info("Successfully authenticated with Deribit API")
-
-    async def request(
+    async def _request(
         self,
-        method: str,
         endpoint: str,
         params: dict | None = None
     ) -> dict:
         """
-        Выполнить JSON-RPC запрос к Deribit API.
+        Выполнить запрос к Deribit API v2 REST.
+
         """
-        url = f"{settings.deribit.DERIBIT_API_URL}{endpoint}"
-        self._request_id += 1
+        base_url = settings.deribit.DERIBIT_API_URL
+        url = f"{base_url}{endpoint}"
 
-        json_body = {
-            "jsonrpc": "2.0",
-            "method": endpoint,
-            "params": params or {},
-            "id": self._request_id
-        }
+        if params:
+            query_string = urlencode(params)
+            url = f"{url}?{query_string}"
 
-        session = await self._ensure_session()
+        session = await self._get_session()
 
-        async with session.post(url, json=json_body) as response:
+        async with session.get(url) as response:
             if response.status != 200:
                 error_text = await response.text()
                 raise DeribitClientError(
@@ -91,79 +92,62 @@ class DeribitClient:
                 )
 
             json_response = await response.json()
-
             if "error" in json_response:
                 error = json_response["error"]
                 raise DeribitClientError(
-                    f"JSON-RPC error: {error.get('message')} (code: {error.get('code')})"
+                    f"API error: {error.get('message', error)}"
                 )
 
-            return json_response.get("result", {})
+            return json_response
 
     async def fetch_price(self, ticker: str) -> PriceData:
         """
         Получить цену для тикера.
         """
-        ticker = ticker.lower()
+        ticker = ticker.upper()
 
-        # Преобразуем btc_usd -> BTC, eth_usd -> ETH
-        currency_map = {"btc_usd": "BTC", "eth_usd": "ETH"}
-        currency = currency_map.get(ticker, ticker.upper())
+        if ticker not in VALID_TICKERS:
+            raise DeribitClientError(f"Unsupported ticker: {ticker}")
 
-        result = await self.request(
-            method="POST",
-            endpoint="/public/get_index",
-            params={"currency": currency}
+        # Преобразуем BTC_USD -> BTC, ETH_USD -> ETH
+        currency_map = {"BTC_USD": "BTC", "ETH_USD": "ETH"}
+        currency = currency_map[ticker]
+
+        result = await self._request(
+            endpoint="/ticker",
+            params={"instrument_name": f"{currency}-PERPETUAL"}
         )
 
-        # Deribit возвращает объект с полем 'index_price'
-        index_price = result.get("index_price") if isinstance(
-            result, dict) else result
-        if index_price is None:
-            raise DeribitClientError(
-                f"Missing index_price in response: {result}")
-
-        timestamp = result.get("timestamp", 0)
-        if timestamp > 0:
+        if "result" in result:
+            index_price = result["result"].get("index_price")
+            timestamp = result["result"].get("timestamp")
+            if index_price is None:
+                raise DeribitClientError(f"Missing index_price for {ticker}")
             timestamp = timestamp // 1000
+        else:
+            raise DeribitClientError(f"Missing index_price for {ticker}")
 
         return PriceData(
             ticker=ticker,
-            price=Decimal(str(index_price)),
+            price=float(index_price),
             timestamp=int(timestamp)
         )
 
-    async def fetch_all_prices(self) -> dict[str, PriceData]:
-        """Получить цены для всех поддерживаемых валют."""
+    async def fetch_all_prices(self) -> Dict[str, PriceData]:
+        """
+        Получить цены для всех поддерживаемых валют
+        """
         prices = {}
 
-        async with self:
-            # Сначала аутентифицируемся
-            await self.authenticate()
-
-            for ticker in VALID_TICKERS:
-                try:
-                    price_data = await self.fetch_price(ticker)
-                    prices[ticker] = price_data
-                    logger.info(f"Fetched {ticker}: {price_data.price}")
-                except DeribitClientError as e:
-                    logger.error(f"Failed to fetch {ticker}: {e}")
+        for ticker in VALID_TICKERS:
+            try:
+                price_data = await self.fetch_price(ticker)
+                prices[ticker] = price_data
+                logger.info(f"Fetched {ticker}: {price_data.price}")
+            except DeribitClientError as e:
+                logger.error(f"Failed to fetch {ticker}: {e}")
 
         return prices
-
-    async def close(self) -> None:
-        """Закрыть HTTP-сессию."""
-        if self._session and not self._session.closed:
-            await self._session.close()
-            self._session = None
-
-    async def __aenter__(self) -> "DeribitClient":
-        """Контекстный менеджер - вход."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Контекстный менеджер - выход."""
-        await self.close()
 
 
 # Экземпляр по умолчанию

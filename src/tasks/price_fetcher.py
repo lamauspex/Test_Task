@@ -7,8 +7,8 @@ from celery.exceptions import SoftTimeLimitExceeded
 from celery_app import celery_app
 
 from config import settings
-from database import DatabaseManager, UnitOfWork
-from src.services import PriceService
+from database import database_manager, UnitOfWork
+from services import PriceService
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +19,13 @@ async def _fetch_prices_async() -> dict:
 
     Единая транзакция для всей операции (Unit of Work).
     """
-    database_manager = DatabaseManager(
-        settings.data_config.get_database_url()
-    )
     service = PriceService()
 
-    async with UnitOfWork(database_manager) as uow:
-        saved_tickers = await service.fetch_and_save_all_prices(uow)
+    # Создаём сессию через контекстный менеджер
+    async with database_manager.session_factory() as session:
+        # UnitOfWork оборачивает сессию, но не управляет её созданием/закрытием
+        async with UnitOfWork(session) as uow:
+            saved_tickers = await service.fetch_and_save_all_prices(uow)
 
     logger.info(f"Successfully fetched and saved prices for: {saved_tickers}")
     return {
@@ -53,7 +53,7 @@ def fetch_crypto_prices(self):
         )
         logger.info("Starting crypto price fetch task")
 
-        # Запускаем асинхронный код
+        # Запускаем асинхронный код в новом event loop
         result = asyncio.run(_fetch_prices_async())
         return result
 

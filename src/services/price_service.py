@@ -19,15 +19,23 @@ class PriceService:
         self,
         deribit_client: DeribitClient | None = None,
     ) -> None:
-        """ Инициализация сервиса цен """
+        """
+        Инициализация сервиса цен.
 
-        self._deribit_client = deribit_client or DeribitClient()
+        Args:
+            deribit_client: Клиент Deribit. Если не передан, создаётся новый.
+        """
+        self._deribit_client = deribit_client
         self._business_logger = get_business_logger()
 
-    @property
-    def deribit_client(self) -> DeribitClient:
-        """ Получить клиент Deribit """
+    async def _get_deribit_client(self) -> DeribitClient:
+        """
+        Получить клиент Deribit с правильным event loop.
 
+        Всегда создаёт новую сессию для текущего loop.
+        """
+        if self._deribit_client is None:
+            self._deribit_client = DeribitClient()
         return self._deribit_client
 
     async def save_price_data(
@@ -56,8 +64,13 @@ class PriceService:
         Получить все цены с Deribit и сохранить в базу данных
 
         Вся операция выполняется в рамках одной транзакции (uow)
+
+        Note: DeribitClient создаётся заново для каждого вызова,
+              чтобы избежать проблем с event loop в Celery.
         """
-        price_data_map = await self._deribit_client.fetch_all_prices()
+        async with DeribitClient() as client:
+            price_data_map = await client.fetch_all_prices()
+
         saved_tickers = []
 
         for ticker, price_data in price_data_map.items():
@@ -126,5 +139,8 @@ class PriceService:
 def get_price_service() -> PriceService:
     """
     Фабрика для получения инстанса сервиса цен
+
+    Note: В контексте FastAPI/Depends создаётся новый инстанс,
+          в контексте Celery также создаётся новый.
     """
     return PriceService()
