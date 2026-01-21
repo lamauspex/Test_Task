@@ -4,9 +4,10 @@ import logging
 import traceback
 from typing import Any, Callable
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from config import settings
@@ -16,7 +17,7 @@ from exceptions import PriceNotFoundError, ErrorResponse
 class ExceptionHandlerMiddleware(BaseHTTPMiddleware):
     """Middleware для централизованной обработки исключений."""
 
-    def __init__(self, app: FastAPI, logger: logging.Logger | None = None):
+    def __init__(self, app: ASGIApp, logger: logging.Logger | None = None):
         super().__init__(app)
         self.logger = logger or logging.getLogger(__name__)
         self.enabled = settings.monitoring_config.ENABLE_EXCEPTION_LOGGING

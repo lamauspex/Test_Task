@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PriceData:
-    """Данные о цене криптовалюты."""
+    """Данные о цене криптовалюты"""
     ticker: str
     price: float
     timestamp: int
@@ -27,13 +27,7 @@ class PriceData:
 
 class DeribitClient:
     """
-    Минимальный клиент для API Deribit.
-
-    Поддерживает: btc_usd, eth_usd
-
-    Использовать как async контекстный менеджер:
-        async with DeribitClient() as client:
-            prices = await client.fetch_all_prices()
+    Минимальный клиент для API Deribit
     """
 
     def __init__(self) -> None:

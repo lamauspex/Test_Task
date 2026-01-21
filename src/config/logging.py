@@ -24,13 +24,6 @@ def setup_logger(
 ) -> logging.Logger:
     """
     Настройка структурированного логирования.
-
-    Args:
-        name: Имя логгера. Если None - root logger.
-        level: Уровень логирования. Берется из settings если None.
-
-    Returns:
-        Настроенный логгер
     """
     log_level = getattr(
         logging, (level or settings.monitoring.LOG_LEVEL).upper(),
