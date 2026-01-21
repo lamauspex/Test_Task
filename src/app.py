@@ -16,7 +16,7 @@ from config import settings, setup_logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Управление жизненным циклом приложения."""
+    """Управление жизненным циклом приложения"""
     yield
 
 
@@ -45,10 +45,10 @@ if settings.monitoring_config.ENABLE_EXCEPTION_LOGGING:
 # Подключаем middleware для CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_config.ALLOWED_ORIGINS,
+    allow_credentials=settings.cors_config.ALLOW_CREDENTIALS,
+    allow_methods=settings.cors_config.ALLOWED_METHODS,
+    allow_headers=settings.cors_config.ALLOWED_HEADERS,
 )
 
 # Подключаем API роутеры

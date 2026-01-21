@@ -1,17 +1,21 @@
 """ Базовые классы для конфигурации """
 
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict
+)
 
 
 class BaseConfig(BaseSettings):
     """
-    Базовый класс конфигурации с поддержкой переменных окружения.
-    Конфигурация загружается ТОЛЬКО из переменных окружения Docker.
+    Базовый класс конфигурации
+    с поддержкой переменных окружения Docker
     """
 
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         case_sensitive=True,
-        extra='ignore'
+        extra='ignore',
+        env_prefix='',
+        env_file=None,
     )

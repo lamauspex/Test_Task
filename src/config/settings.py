@@ -8,6 +8,7 @@ from .celery import celery_config
 from .redis import redis_config
 from .database import data_config
 from .app import app_config
+from .cors import cors_config
 
 
 class Settings:
@@ -21,6 +22,7 @@ class Settings:
         self.celery = celery_config
         self.deribit = derbit_config
         self.redis = redis_config
+        self.cors = cors_config
 
 
 settings = Settings()

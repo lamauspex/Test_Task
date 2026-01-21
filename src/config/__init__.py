@@ -11,6 +11,7 @@ from .redis import redis_config
 from .database import data_config
 from .settings import Settings
 from .app import app_config
+from .cors import cors_config
 from .logging import (
     setup_logger,
     get_logger,
@@ -27,5 +28,6 @@ __all__ = [
     "derbit_config",
     "setup_logger",
     "get_logger",
-    "setup_logging"
+    "setup_logging",
+    "cors_config"
 ]

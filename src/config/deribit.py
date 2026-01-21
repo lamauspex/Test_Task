@@ -9,7 +9,7 @@ class DeribitConfig(BaseConfig):
     """Конфигурация Deribit API"""
 
     DERIBIT_API_URL: str = Field(
-        description="Базовый URL Deribit API",
+        description="Базовый URL Deribit API"
     )
 
 
